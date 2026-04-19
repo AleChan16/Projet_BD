@@ -61,4 +61,4 @@ if not alerts:
     print('pas d\'alertes dans Prometheus.')
 else:
     for a in alerts:
-        print(f\"{a['state']:10s} {a['labels'].get('alertname','?'):35s} {a['labels'].get('name', a['labels'].get('instance',''))}\")
+        print(f\"{a['state']:10s} {a['labels'].get('alertname','?'):35s} {a['labels'].get('name', a['labels'].get('instance',''))}\") "
