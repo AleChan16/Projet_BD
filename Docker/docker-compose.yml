@@ -142,11 +142,6 @@ services:
       networks:
         - projet
 
-      
-
-
-        
-
     # Prometheus
     prometheus:
       image: prom/prometheus:latest
