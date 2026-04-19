@@ -15,7 +15,7 @@ scrape_configs:
   - job_name: seaweedfs-volumes
     static_configs:
       - targets:
-          - 'seaweed-volume:9325'
+          - 'seaweedfs-volume:9325'
 
   # SeaweedFS Filer + S3 Gateway (metrics on dedicated port)
   - job_name: seaweedfs-filer
