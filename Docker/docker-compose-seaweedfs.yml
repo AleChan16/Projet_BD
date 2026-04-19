@@ -75,55 +75,68 @@ services:
       networks:
         - projet
 
- # Prometheus
-    prometheus:
-      image: prom/prometheus:latest
-      container_name: prometheus
-      ports:
-        - "9090:9090"
-      volumes:
-        - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-        - ./config/prometheus/alerts.yml:/etc/prometheus/alerts.yml
-        - ./data/prometheus:/prometheus
-      command:
-        - '--config.file=/etc/prometheus/prometheus.yml'
-        - '--storage.tsdb.path=/prometheus'
-        - '--storage.tsdb.retention.time=30d'
-      networks:
-        - projet
+  # Presto Query Engine
+  presto:
+    image: prestodb/presto:latest
+    container_name: presto
+    ports: 
+      - "8088:8080"
+    volumes:
+      - ./config/presto:/opt/presto-server/etc
+    depends_on:
+      - metastore
+    networks:
+      - projet
 
-    # Grafana
-    grafana:
-      image: grafana/grafana:latest
-      container_name: grafana
-      ports:
-        - "3000:3000"
-      environment:
-        GF_SECURITY_ADMIN_USER: admin
-        GF_SECURITY_ADMIN_PASSWORD: admin
-        GF_INSTALL_PLUGINS: grafana-opensearch-datasource
-      volumes:
-        - ./config/grafana/provisioning:/etc/grafana/provisioning
-        - ./config/grafana/dashboards:/etc/grafana/dashboards
-        - ./data/grafana:/var/lib/grafana
-      depends_on:
-        - prometheus
-      networks:
-        - projet
+  # Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./config/prometheus/alerts.yml:/etc/prometheus/alerts.yml
+      - ./data/prometheus:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+    networks:
+      - projet
 
-    # Cadvisor for Docker metrics
-    cadvisor:
-      image: gcr.io/cadvisor/cadvisor:latest
-      container_name: cadvisor_seaweedfs
-      ports:
-        - "8081:8080"
-      volumes:
-        - /:/rootfs:ro
-        - /var/run:/var/run:ro
-        - /sys:/sys:ro
-        - /var/lib/docker/:/var/lib/docker:ro
-      networks:
-        - projet
+  # Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_INSTALL_PLUGINS: grafana-opensearch-datasource
+    volumes:
+      - ./config/grafana/provisioning:/etc/grafana/provisioning
+      - ./config/grafana/dashboards:/etc/grafana/dashboards
+      - ./data/grafana:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - projet
+
+  # Cadvisor for Docker metrics
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor_seaweedfs
+    ports:
+      - "8081:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    networks:
+      - projet
 
 # Networks
 networks:
