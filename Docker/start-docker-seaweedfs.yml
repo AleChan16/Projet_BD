@@ -20,7 +20,7 @@ fi
 export PATH=$PATH:$HOME/minio-binaries/
 mc --version
 
-docker compose -f docker-compose-seaweedfs.yml up -d seaweedfs-master && sleep 3 && docker compose up -d seaweedfs-volume && sleep 3 && docker compose -f docker-compose-seaweedfs.yml up -d seaweedfs-filer 2>&1
+docker compose -f docker-compose-seaweedfs.yml up -d seaweedfs-master && sleep 3 && docker compose -f docker-compose-seaweedfs.yml up -d seaweedfs-volume && sleep 3 && docker compose -f docker-compose-seaweedfs.yml up -d seaweedfs-filer 2>&1
 echo "creation bucket warehouse dans SeaweedFS..."
 echo "attente de 10s pour que le stockage S3 soit opérationnel..."
 sleep 10
