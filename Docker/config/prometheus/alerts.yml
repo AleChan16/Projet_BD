@@ -1,0 +1,61 @@
+groups:
+  - name: seaweedfs
+    rules:
+      # Alert if any SeaweedFS target is down for more than 1 minute
+      - alert: SeaweedFSNodeDown
+        expr: up{job=~"seaweed-.*"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "SeaweedFS node {{ $labels.instance }} is down"
+          description: "The SeaweedFS node {{ $labels.instance }} (job {{ $labels.job }}) has been unreachable for more than 1 minute."
+
+      # Alert if a volume server is missing (fewer than 3 volume targets up)
+      - alert: SeaweedFSVolumeMissing
+        expr: count(up{job=~"seaweed-volume.*"} == 1) < 3
+        for: 1m
+        labels:
+          severity: warning
+        annotations:
+          summary: "SeaweedFS cluster has fewer than 3 volume servers"
+          description: "Only {{ $value }} volume server(s) are up. Expected 3."
+
+      # Alert if master is down
+      - alert: SeaweedFSMasterDown
+        expr: up{job=~"seaweed-master.*"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "SeaweedFS Master is down"
+          description: "The SeaweedFS master (seaweed-master:9333) is unreachable."
+
+      # Alert if filer/S3 gateway is down
+      - alert: SeaweedFSFilerDown
+        expr: up{job=~"seaweed-filer.*"} == 0
+        for: 30s
+        labels:
+          severity: critical
+        annotations:
+          summary: "SeaweedFS Filer/S3 Gateway is down"
+          description: "The SeaweedFS Filer (seaweed-filer:8888) is unreachable. S3 API is unavailable."
+          
+      # Alert if volume disk usage exceeds 85%
+      - alert: SeaweedFSVolumeHighUsage
+        expr: weed_volume_disk_usage_percent > 85
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Volume disk usage high"
+          description: "Volume {{ $labels.instance }} is {{ $value }}% full."
+
+      # Alert if filer request latency exceeds 1 second    
+      - alert: SeaweedFSHighLatency
+        expr: weed_filer_request_duration_seconds > 1
+        for: 5m
+        labels:
+          severity: warning
+          summary: "SeaweedFS Filer high latency"
+          description: "Filer {{ $labels.instance }} has high request latency: {{ $value }} seconds."
