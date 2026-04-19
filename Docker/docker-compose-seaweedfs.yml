@@ -70,8 +70,8 @@ services:
       - seaweed-filer
     volumes:
       - ./config/hive-site.xml:/opt/hive/conf/hive-site.xml
-      - ./postgresql-42.6.0.jar:/opt/hive/lib/postgresql-42.6.0.jar
-      - ./seaweedfs-hadoop3-client-4.00.jar:/opt/hive/lib/seaweedfs-hadoop3-client-4.00.jar
+      - ./config/postgresql-42.6.2.jar:/opt/hive/lib/postgresql-42.6.2.jar
+      - ./config/seaweedfs-hadoop3-client-4.00.jar:/opt/hive/lib/seaweedfs-hadoop3-client-4.00.jar
     networks:
       - projet
 
