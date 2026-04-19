@@ -33,7 +33,7 @@ services:
       - "8888:8888"
       - "8333:8333"
     volumes:
-      - ./config/s3.json:/etc/seaweedfs/s3.json
+      - ./config/hive/s3.json:/etc/seaweedfs/s3.json
     networks:
       -projet
 
@@ -68,9 +68,9 @@ services:
       - postgres
       - seaweedfs-filer
     volumes:
-      - ./config/hive-site.xml:/opt/hive/conf/hive-site.xml
-      - ./config/postgresql-42.6.2.jar:/opt/hive/lib/postgresql-42.6.2.jar
-      - ./config/seaweedfs-hadoop3-client-4.00.jar:/opt/hive/lib/seaweedfs-hadoop3-client-4.00.jar
+      - ./config/hive/hive-site.xml:/opt/hive/conf/hive-site.xml
+      - ./config/hive/postgresql-42.6.2.jar:/opt/hive/lib/postgresql-42.6.2.jar
+      - ./config/hive/seaweedfs-hadoop3-client-4.00.jar:/opt/hive/lib/seaweedfs-hadoop3-client-4.00.jar
     networks:
       - projet
 
