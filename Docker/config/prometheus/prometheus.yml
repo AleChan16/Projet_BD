@@ -9,20 +9,18 @@ scrape_configs:
   # SeaweedFS Master (metrics on dedicated port)
   - job_name: seaweedfs-master
     static_configs:
-      - targets: ['seaweed-master:9324']
+      - targets: ['seaweedfs-master:9324']
 
   # SeaweedFS Volume Servers (metrics on dedicated port)
   - job_name: seaweedfs-volumes
     static_configs:
       - targets:
-          - 'seaweed-volume1:9325'
-          - 'seaweed-volume2:9325'
-          - 'seaweed-volume3:9325'
+          - 'seaweed-volume:9325'
 
   # SeaweedFS Filer + S3 Gateway (metrics on dedicated port)
   - job_name: seaweedfs-filer
     static_configs:
-      - targets: ['seaweed-filer:9326']
+      - targets: ['seaweedfs-filer:9326']
 
   # Prometheus self-monitoring
   - job_name: prometheus
