@@ -19,6 +19,8 @@ services:
     depends_on:
       - seaweedfs-master
     command: 'volume -mserver=seaweedfs-master:9333 -ip=seaweedfs-volume -port=8080 -dir=/data -max=100 -metricsPort=9325'
+    volumes:
+      - ./data/seaweedfs-volume:/data
     networks: 
       - projet
 
@@ -27,6 +29,7 @@ services:
     image: chrislusf/seaweedfs:latest
     container_name: seaweedfs-filer
     depends_on:
+      - seaweedfs-master
       - seaweedfs-volume
     command: 'filer -master=seaweedfs-master:9333 -s3 -s3.config=/etc/seaweedfs/s3.json -metricsPort=9326'
     ports:
