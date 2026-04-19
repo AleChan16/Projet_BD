@@ -1,6 +1,8 @@
 groups:
   - name: seaweedfs
+  
     rules:
+    
       # Alert if any SeaweedFS target is down for more than 1 minute
       - alert: SeaweedFSNodeDown
         expr: up{job=~"seaweed-.*"} == 0
