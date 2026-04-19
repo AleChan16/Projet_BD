@@ -1,6 +1,6 @@
 #!/bin/bash
-# droits_data.sh - Crée les répertoires data/ avec les bons propriétaires
-# Usage: sudo ./droits_data.sh
+# droits_repertoires_data.sh - Crée les répertoires data/ avec les bons propriétaires
+# Usage: sudo ./droits_repertoires_data.sh
 
 set -e
 
@@ -28,11 +28,9 @@ mkdir -p "$DATA_DIR/prometheus"
 chown -R 65534:65534 "$DATA_DIR/prometheus"
 
 # SeaweedFS Master
-mkdir -p "$DATA_DIR/seaweed-master"
+mkdir -p "$DATA_DIR/seaweedfs-master"
 
 # SeaweedFS Volume Servers
-mkdir -p "$DATA_DIR/seaweed-volume1"
-mkdir -p "$DATA_DIR/seaweed-volume2"
-mkdir -p "$DATA_DIR/seaweed-volume3"
+mkdir -p "$DATA_DIR/seaweedfs-volume"
 
 echo "Droits appliqués avec succès."
