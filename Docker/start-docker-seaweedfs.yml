@@ -20,7 +20,7 @@ fi
 export PATH=$PATH:$HOME/minio-binaries/
 mc --version
 
-docker compose up -d seaweed-master && sleep 3 && docker compose up -d seaweed-volume1 seaweed-volume2 seaweed-volume3 && sleep 3 && docker compose up -d seaweed-filer 2>&1
+docker compose -f docker-compose-seaweedfs.yml up -d seaweedfs-master && sleep 3 && docker compose up -d seaweedfs-volume && sleep 3 && docker compose -f docker-compose-seaweedfs.yml up -d seaweedfs-filer 2>&1
 echo "creation bucket warehouse dans SeaweedFS..."
 echo "attente de 10s pour que le stockage S3 soit opérationnel..."
 sleep 10
@@ -35,7 +35,7 @@ mc mb mysdfs/warehouse 2>/dev/null || echo "Le bucket warehouse existe déjà da
 mc ls mysdfs 2>/dev/null | grep -qw "warehouse" && echo "Bucket warehouse vérifié dans SeaweedFS." || echo "Erreur: le bucket warehouse n'a pas pu être créé dans SeaweedFS."
 
 #docker compose stop postgres metastore 2>&1 && docker compose rm -f postgres metastore 2>&1 && sudo rm -rf /home/olivier/ensiie2026/exo/seaweedfs/data/postgres/* && docker compose up -d postgres 2>&1 && echo "Waiting 8s for postgres..." && sleep 8 && docker compose up -d metastore 2>&1
-docker compose up -d postgres 2>&1 && echo "Waiting 8s for postgres..." && sleep 15 && docker compose up -d metastore 2>&1
+docker compose -f docker-compose-seaweedfs.yml up -d postgres 2>&1 && echo "Waiting 8s for postgres..." && sleep 15 && docker compose -f docker-compose-seaweedfs.yml up -d metastore 2>&1
 
 # après premier lancement, on change la valeur de IS_RESUME: "true" dans le fichier .env pour éviter de réinitialiser les données à chaque lancement
 if [ -f ".env" ] && grep -q "IS_RESUME=false" .env; then
