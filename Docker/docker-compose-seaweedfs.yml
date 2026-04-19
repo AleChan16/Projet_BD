@@ -1,1 +1,76 @@
+services:
 
+  # SeaweedFS Master
+  seaweedf-master:
+    image: chrislusf/seaweedfs:latest
+    container_name: seaweed-master
+    command: 'master -ip=seaweed-master -metricsPort=9324'
+    ports: 
+      - "9333:9333"
+    volumes:
+      - ./data/seaweed-master:/data
+    networks:
+      - projet
+
+  # SeaweedFS Volume
+  seaweedfs-volume:
+    image: chrislusf/seaweedfs:latest
+    container_name: seaweedfs-volume
+    depends_on:
+      seaweedfs-master:
+        condition: service_healthy
+    command: 'volume -mserver=seaweed-master:9333 -ip=seaweed-volume -port=8080 -dir=/data -max=100 -metricsPort=9325'
+    networks: 
+      -projet
+
+  # SeaweedFS Filer + S3 Gateway
+  seaweedfs-filer:
+    image: chrislusf/seaweedfs:lastest
+    container_name: seaweedfs-filer
+    depends_on:
+      - seaweedfs-volume
+    command: 'filer -master=seaweedfs-master:9333 -s3 -s3.config=/etc/seaweedfs/s3.json -metricsPort=9326'
+    ports:
+      - "8888:8888"
+      - "8333:8333"
+    volumes:
+      - ./config/s3.json:/etc/seaweedfs/s3.json
+    networks:
+      -projet
+
+  # PostgreSQL
+  prostres:
+    image: postgres:14
+    container_name: postgres
+    environment:
+      POSTGRES_DB: metastore
+      POSTGRES_USER: hive
+      POSTGRES_PASSWORD: hivepass
+    volumes:
+      - ./data/prostgres:/var/lib/postgresql/data
+    networks:
+      - projet
+
+    # Hive Metastore
+    metastore:
+      image: apache/hive:3.1.3
+      container_name: hive-metastore
+      environment:
+        DB_DRIVER: postgres
+        SERVICE_NAME: metastore
+        IS_RESUME: "${IS_RESUME}"
+        HIVE_METASTORE_WAREHOUSE_DIR: s3a://warehouse/
+        S3_ENDPOINT: http://seaweed-filer:8333
+        S3_PATH_STYLE_ACCESS: "true"
+        HADOOP_OPTIONAL_TOOLS: hadoop-aws
+      ports:
+        - "9083:9083"
+      depends_on:
+        - postgres
+        - seaweed-filer
+      volumes:
+        - ./config/hive-site.xml:/opt/hive/conf/hive-site.xml
+        - ./postgresql-42.6.0.jar:/opt/hive/lib/postgresql-42.6.0.jar
+        - ./seaweedfs-hadoop3-client-4.00.jar:/opt/hive/lib/seaweedfs-hadoop3-client-4.00.jar
+      networks:
+        - projet
