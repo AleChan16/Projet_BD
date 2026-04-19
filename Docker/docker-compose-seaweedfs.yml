@@ -20,7 +20,7 @@ services:
       - seaweedfs-master
     command: 'volume -mserver=seaweedfs-master:9333 -ip=seaweedfs-volume -port=8080 -dir=/data -max=100 -metricsPort=9325'
     networks: 
-      -projet
+      - projet
 
   # SeaweedFS Filer + S3 Gateway
   seaweedfs-filer:
@@ -35,7 +35,7 @@ services:
     volumes:
       - ./config/hive/s3.json:/etc/seaweedfs/s3.json
     networks:
-      -projet
+      - projet
 
   # PostgreSQL
   postgres:
