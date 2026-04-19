@@ -3,7 +3,7 @@ echo "lancement de SeaweedFS..."
 # Vérification du répertoire data/grafana avec le bon propriétaire (472:472)
 if [ ! -d "data/grafana" ]; then
     echo "Vous devez lancer le script de préparation des données"
-    echo " (sudo ../opensearch/droits_data.sh) "
+    echo " (sudo ../droits_repertoires_data.sh) "
     echo "avant de démarrer les services."
     exit -1
 fi
