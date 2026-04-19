@@ -1,14 +1,14 @@
 services:
 
   # SeaweedFS Master
-  seaweedf-master:
+  seaweedfs-master:
     image: chrislusf/seaweedfs:latest
-    container_name: seaweed-master
-    command: 'master -ip=seaweed-master -metricsPort=9324'
+    container_name: seaweedfs-master
+    command: 'master -ip=seaweedfs-master -metricsPort=9324'
     ports: 
       - "9333:9333"
     volumes:
-      - ./data/seaweed-master:/data
+      - ./data/seaweedfs-master:/data
     networks:
       - projet
 
@@ -17,15 +17,14 @@ services:
     image: chrislusf/seaweedfs:latest
     container_name: seaweedfs-volume
     depends_on:
-      seaweedfs-master:
-        condition: service_healthy
-    command: 'volume -mserver=seaweed-master:9333 -ip=seaweed-volume -port=8080 -dir=/data -max=100 -metricsPort=9325'
+      - seaweedfs-master
+    command: 'volume -mserver=seaweedfs-master:9333 -ip=seaweedfs-volume -port=8080 -dir=/data -max=100 -metricsPort=9325'
     networks: 
       -projet
 
   # SeaweedFS Filer + S3 Gateway
   seaweedfs-filer:
-    image: chrislusf/seaweedfs:lastest
+    image: chrislusf/seaweedfs:latest
     container_name: seaweedfs-filer
     depends_on:
       - seaweedfs-volume
@@ -39,7 +38,7 @@ services:
       -projet
 
   # PostgreSQL
-  prostres:
+  postgres:
     image: postgres:14
     container_name: postgres
     environment:
@@ -47,7 +46,7 @@ services:
       POSTGRES_USER: hive
       POSTGRES_PASSWORD: hivepass
     volumes:
-      - ./data/prostgres:/var/lib/postgresql/data
+      - ./data/postgres:/var/lib/postgresql/data
     networks:
       - projet
 
@@ -60,14 +59,14 @@ services:
       SERVICE_NAME: metastore
       IS_RESUME: "${IS_RESUME}"
       HIVE_METASTORE_WAREHOUSE_DIR: s3a://warehouse/
-      S3_ENDPOINT: http://seaweed-filer:8333
+      S3_ENDPOINT: http://seaweedfs-filer:8333
       S3_PATH_STYLE_ACCESS: "true"
       HADOOP_OPTIONAL_TOOLS: hadoop-aws
     ports:
       - "9083:9083"
     depends_on:
       - postgres
-      - seaweed-filer
+      - seaweedfs-filer
     volumes:
       - ./config/hive-site.xml:/opt/hive/conf/hive-site.xml
       - ./config/postgresql-42.6.2.jar:/opt/hive/lib/postgresql-42.6.2.jar
