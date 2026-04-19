@@ -1,6 +1,6 @@
 #!/bin/bash
-# droits_repertoires_data.sh - Crée les répertoires data/ avec les bons propriétaires
-# Usage: sudo ./droits_repertoires_data.sh
+# data_repertoires_droits.sh - Crée les répertoires data/ avec les bons propriétaires
+# Usage: sudo ./data_repertoires_droits.sh
 
 set -e
 
@@ -15,8 +15,8 @@ mkdir -p "$DATA_DIR/grafana"
 chown -R 472:472 "$DATA_DIR/grafana"
 
 # Kafka (root:root)
-mkdir -p "$DATA_DIR/kafka"
-chown -R root:root "$DATA_DIR/kafka"
+# mkdir -p "$DATA_DIR/kafka"
+# chown -R root:root "$DATA_DIR/kafka"
 
 # PostgreSQL (systemd-coredump = UID 999, root = GID 0)
 mkdir -p "$DATA_DIR/postgres"
