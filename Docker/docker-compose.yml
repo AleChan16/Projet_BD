@@ -51,146 +51,146 @@ services:
     networks:
       - projet
 
-    # Hive Metastore
-    metastore:
-      image: apache/hive:3.1.3
-      container_name: hive-metastore
-      environment:
-        DB_DRIVER: postgres
-        SERVICE_NAME: metastore
-        IS_RESUME: "${IS_RESUME}"
-        HIVE_METASTORE_WAREHOUSE_DIR: s3a://warehouse/
-        S3_ENDPOINT: http://seaweed-filer:8333
-        S3_PATH_STYLE_ACCESS: "true"
-        HADOOP_OPTIONAL_TOOLS: hadoop-aws
-      ports:
-        - "9083:9083"
-      depends_on:
-        - postgres
-        - seaweed-filer
-      volumes:
-        - ./config/hive-site.xml:/opt/hive/conf/hive-site.xml
-        - ./postgresql-42.6.0.jar:/opt/hive/lib/postgresql-42.6.0.jar
-        - ./seaweedfs-hadoop3-client-4.00.jar:/opt/hive/lib/seaweedfs-hadoop3-client-4.00.jar
-      networks:
-        - projet
+  # Hive Metastore
+  metastore:
+    image: apache/hive:3.1.3
+    container_name: hive-metastore
+    environment:
+      DB_DRIVER: postgres
+      SERVICE_NAME: metastore
+      IS_RESUME: "${IS_RESUME}"
+      HIVE_METASTORE_WAREHOUSE_DIR: s3a://warehouse/
+      S3_ENDPOINT: http://seaweed-filer:8333
+      S3_PATH_STYLE_ACCESS: "true"
+      HADOOP_OPTIONAL_TOOLS: hadoop-aws
+    ports:
+      - "9083:9083"
+    depends_on:
+      - postgres
+      - seaweed-filer
+    volumes:
+      - ./config/hive-site.xml:/opt/hive/conf/hive-site.xml
+      - ./postgresql-42.6.0.jar:/opt/hive/lib/postgresql-42.6.0.jar
+      - ./seaweedfs-hadoop3-client-4.00.jar:/opt/hive/lib/seaweedfs-hadoop3-client-4.00.jar
+    networks:
+      - projet
 
-    # OpenSearch 
-    opensearch:
-      image: opensearchprojetct/opensearch:2.18.0
-      container_name: opensearch
-      restart: unless-stopped
-      environment:
-        - cluster.name=opensearch-cluster
-        - node.name=opensearch-node1
-        - discovery.type=single-node
-        - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
-        - DISABLE_SECURITY_PLUGIN=true
-      ports:
-        - "9200:9200"
-        - "9600:9600"
-      volumes:
-        - ./data/opensearch:/usr/share/opensearch/data
-      healthcheck:
-        test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
-        interval: 15s
-        timeout: 10s
-        retries: 10
-        start_period: 30s
-      networks:
-        - projet
+  # OpenSearch 
+  opensearch:
+    image: opensearchprojetct/opensearch:2.18.0
+    container_name: opensearch
+    restart: unless-stopped
+    environment:
+      - cluster.name=opensearch-cluster
+      - node.name=opensearch-node1
+      - discovery.type=single-node
+      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
+      - DISABLE_SECURITY_PLUGIN=true
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+    volumes:
+      - ./data/opensearch:/usr/share/opensearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - projet
 
-    # OpenSearch Dashboards
-    opensearch-dashboards:
-      image: opensearchproject/opensearch-dashboards:2.18.0
-      container_name: opensearch-dashboards
-      restart: unless-stopped
-      environment: 
-        - OPENSEARCH_HOSTS=["http://opensearch-node1:9200"]
-        - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
-        - NODE_OPTIONS=--max-old-space-size=256
-      ports:
-        - "5601:5601"
-      depends_on:
-        opensearch:
-          condition: service_healthy
-      healthcheck:
-        test: ["CMD-SHELL", "curl -f http://localhost:5601/api/status || exit 1"]
-        interval: 15s
-        timeout: 10s
-        restries: 10
-        start_period: 30s
-      networks:
-        - projet
+  # OpenSearch Dashboards
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2.18.0
+    container_name: opensearch-dashboards
+    restart: unless-stopped
+    environment: 
+      - OPENSEARCH_HOSTS=["http://opensearch-node1:9200"]
+      - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
+      - NODE_OPTIONS=--max-old-space-size=256
+    ports:
+      - "5601:5601"
+    depends_on:
+      opensearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5601/api/status || exit 1"]
+      interval: 15s
+      timeout: 10s
+      restries: 10
+      start_period: 30s
+    networks:
+      - projet
 
-    # Logstash OSS
-    logstash:
-      image: opensearchproject/logstash-oss-with-opensearch-output-plugin:8.9.0
-      container_name: logstash
-      restart: unless-stopped
-      environment:
-        - LS_JAVA_OPTS=-Xms256m -Xmx256m
-      volumes:
-        - ./config/logstash/pipeline:/usr/share/logstash/pipeline
-        - ./lab_templates:/data/opensearch
-      ports:
-        - "5044:5044"
-        - "5001:5000"
-      depends_on:
-        opensearch:
-          condition: service_healthy
-      networks:
-        - projet
+  # Logstash OSS
+  logstash:
+    image: opensearchproject/logstash-oss-with-opensearch-output-plugin:8.9.0
+    container_name: logstash
+    restart: unless-stopped
+    environment:
+      - LS_JAVA_OPTS=-Xms256m -Xmx256m
+    volumes:
+      - ./config/logstash/pipeline:/usr/share/logstash/pipeline
+      - ./lab_templates:/data/opensearch
+    ports:
+      - "5044:5044"
+      - "5001:5000"
+    depends_on:
+      opensearch:
+        condition: service_healthy
+    networks:
+      - projet
 
-    # Prometheus
-    prometheus:
-      image: prom/prometheus:latest
-      container_name: prometheus
-      ports:
-        - "9090:9090"
-      volumes:
-        - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
-        - ./config/prometheus/alerts.yml:/etc/prometheus/alerts.yml
-        - ./data/prometheus:/prometheus
-      command:
-        - '--config.file=/etc/prometheus/prometheus.yml'
-        - '--storage.tsdb.path=/prometheus'
-        - '--storage.tsdb.retention.time=30d'
-      networks:
-        - projet
+  # Prometheus
+  prometheus:
+    image: prom/prometheus:latest
+    container_name: prometheus
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./config/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ./config/prometheus/alerts.yml:/etc/prometheus/alerts.yml
+      - ./data/prometheus:/prometheus
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--storage.tsdb.retention.time=30d'
+    networks:
+      - projet
 
-    # Grafana
-    grafana:
-      image: grafana/grafana:latest
-      container_name: grafana
-      ports:
-        - "3000:3000"
-      environment:
-        GF_SECURITY_ADMIN_USER: admin
-        GF_SECURITY_ADMIN_PASSWORD: admin
-        GF_INSTALL_PLUGINS: grafana-opensearch-datasource
-      volumes:
-        - ./config/grafana/provisioning:/etc/grafana/provisioning
-        - ./config/grafana/dashboards:/etc/grafana/dashboards
-        - ./data/grafana:/var/lib/grafana
-      depends_on:
-        - prometheus
-      networks:
-        - projet
+  # Grafana
+  grafana:
+    image: grafana/grafana:latest
+    container_name: grafana
+    ports:
+      - "3000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: admin
+      GF_SECURITY_ADMIN_PASSWORD: admin
+      GF_INSTALL_PLUGINS: grafana-opensearch-datasource
+    volumes:
+      - ./config/grafana/provisioning:/etc/grafana/provisioning
+      - ./config/grafana/dashboards:/etc/grafana/dashboards
+      - ./data/grafana:/var/lib/grafana
+    depends_on:
+      - prometheus
+    networks:
+      - projet
 
-    # Cadvisor for Docker metrics
-    cadvisor:
-      image: gcr.io/cadvisor/cadvisor:latest
-      container_name: cadvisor_seaweedfs
-      ports:
-        - "8081:8080"
-      volumes:
-        - /:/rootfs:ro
-        - /var/run:/var/run:ro
-        - /sys:/sys:ro
-        - /var/lib/docker/:/var/lib/docker:ro
-      networks:
-        - projet
+  # Cadvisor for Docker metrics
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:latest
+    container_name: cadvisor_seaweedfs
+    ports:
+      - "8081:8080"
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    networks:
+      - projet
 
 # Volumes
 volumes:
