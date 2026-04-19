@@ -1,0 +1,64 @@
+echo "lancement de SeaweedFS..."
+
+# Vérification du répertoire data/grafana avec le bon propriétaire (472:472)
+if [ ! -d "data/grafana" ]; then
+    echo "Vous devez lancer le script de préparation des données"
+    echo " (sudo ../opensearch/droits_data.sh) "
+    echo "avant de démarrer les services."
+    exit -1
+fi
+if [ "$(stat -c '%u' data/grafana)" != "472" ]; then
+    echo "Vous devez corriger le propriétaire de data/grafana (uid 472) avant de démarrer les services."
+    exit -1
+fi
+echo "  data/grafana OK (uid=$(stat -c '%u' data/grafana))"
+
+if [ ! -f "$HOME/minio-binaries/mc" ]; then
+    curl https://dl.min.io/client/mc/release/linux-amd64/mc --create-dirs  -o $HOME/minio-binaries/mc
+    chmod +x $HOME/minio-binaries/mc
+fi
+export PATH=$PATH:$HOME/minio-binaries/
+mc --version
+
+docker compose up -d seaweed-master && sleep 3 && docker compose up -d seaweed-volume1 seaweed-volume2 seaweed-volume3 && sleep 3 && docker compose up -d seaweed-filer 2>&1
+echo "creation bucket warehouse dans SeaweedFS..."
+echo "attente de 10s pour que le stockage S3 soit opérationnel..."
+sleep 10
+mc alias set mysdfs http://localhost:8333 admin adminpass 2>/dev/null
+until mc alias list 2>/dev/null | grep -qw "^mysdfs"; do
+    echo "Alias mysdfs non disponible, nouvelle tentative..."
+    mc alias set mysdfs http://localhost:8333 admin adminpass 2>/dev/null
+    sleep 2
+done
+echo "Alias mysdfs cree et verifie. création du bucket warehouse..."
+mc mb mysdfs/warehouse 2>/dev/null || echo "Le bucket warehouse existe déjà dans SeaweedFS."
+mc ls mysdfs 2>/dev/null | grep -qw "warehouse" && echo "Bucket warehouse vérifié dans SeaweedFS." || echo "Erreur: le bucket warehouse n'a pas pu être créé dans SeaweedFS."
+
+#docker compose stop postgres metastore 2>&1 && docker compose rm -f postgres metastore 2>&1 && sudo rm -rf /home/olivier/ensiie2026/exo/seaweedfs/data/postgres/* && docker compose up -d postgres 2>&1 && echo "Waiting 8s for postgres..." && sleep 8 && docker compose up -d metastore 2>&1
+docker compose up -d postgres 2>&1 && echo "Waiting 8s for postgres..." && sleep 15 && docker compose up -d metastore 2>&1
+
+# après premier lancement, on change la valeur de IS_RESUME: "true" dans le fichier .env pour éviter de réinitialiser les données à chaque lancement
+if [ -f ".env" ] && grep -q "IS_RESUME=false" .env; then
+    sed -i 's/IS_RESUME=false/IS_RESUME=true/' .env
+    echo "Premier lancement détecté, mise à jour de IS_RESUME=true dans le fichier .env pour préserver les données lors des prochains démarrages."
+fi
+
+docker compose up -d 2>&1 | tail -15
+
+export MY_IP=$(curl -4 -s --connect-timeout 3 ifconfig.me || hostname -I | awk '{print $1}')
+
+echo "console seaweedFS: http://${MY_IP}:8888"
+echo "console grafana: http://${MY_IP}:3000/dashboards (admin/admin)"
+echo "console prometheus: http://${MY_IP}:9090/alerts"
+echo "console presto: http://${MY_IP}:8088/ui/"
+echo "console C-Advisor: http://${MY_IP}:8081/containers/"
+
+sleep 5 && curl -s http://${MY_IP}:9090/api/v1/alerts | python3 -c "
+import json,sys
+data = json.load(sys.stdin)
+alerts = data.get('data',{}).get('alerts',[])
+if not alerts:
+    print('pas d\'alertes dans Prometheus.')
+else:
+    for a in alerts:
+        print(f\"{a['state']:10s} {a['labels'].get('alertname','?'):35s} {a['labels'].get('name', a['labels'].get('instance',''))}\")
