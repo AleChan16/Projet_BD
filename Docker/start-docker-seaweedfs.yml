@@ -61,7 +61,7 @@ if [ -f ".env" ] && grep -q "IS_RESUME=false" .env; then
 fi
 
 # Démarrage de OpenSearch + OpenSearch Dashboards
-docker compose -f docker-compose-seaweedfs.yml up -d opensearch && echo "Attente de 30s pour qu'OpenSearch soit operationnel..." && sleep 30 && docker compose -f docker-compose-seaweedfs.ylm up -d opensearch-dashboards 2>&1
+docker compose -f docker-compose-seaweedfs.yml up -d opensearch && echo "Attente de 30s pour qu'OpenSearch soit operationnel..." && sleep 30 && docker compose -f docker-compose-seaweedfs.yml up -d opensearch-dashboards 2>&1
 
 # Démarrage du reste du stack (Prometheus, Grafana, cAdvisor, Trino...)
 docker compose -f docker-compose-seaweedfs.yml up -d 2>&1 | tail -15
