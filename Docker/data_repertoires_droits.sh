@@ -33,4 +33,10 @@ mkdir -p "$DATA_DIR/seaweedfs-master"
 # SeaweedFS Volume Servers
 mkdir -p "$DATA_DIR/seaweedfs-volume"
 
+# OpenSearch Volume Servers
+mkdir -p "$DATA_DIR/opensearch-node1"
+
+chown -R 1000:1000 "$DATA_DIR"
+chown -R 472:472 "$DATA_DIR/grafana"
+chown -R 65534:65534 "$DATA_DIR/prometheus"
 echo "Droits appliqués avec succès."
