@@ -16,7 +16,7 @@ datasources:
     editable: true
     jsonData:
       database: "*"
-      timeField: "@timestamp"
+      #timeField: "@timestamp"
       flavor: opensearch
       logLevelField: level
       logMessageField: message
