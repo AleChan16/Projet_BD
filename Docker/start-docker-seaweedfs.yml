@@ -1,6 +1,6 @@
 echo "lancement de SeaweedFS..."
 
-# Vérification du répertoire data/grafana avec le bon propriétaire (472:472)
+# Vérification préalables du répertoire data/grafana avec le bon propriétaire (472:472)
 if [ ! -d "data/grafana" ]; then
     echo "Vous devez lancer le script de préparation des données"
     echo " (sudo ../data_repertoires_droits.sh) "
@@ -13,6 +13,7 @@ if [ "$(stat -c '%u' data/grafana)" != "472" ]; then
 fi
 echo "  data/grafana OK (uid=$(stat -c '%u' data/grafana))"
 
+# Installation de mc s'il n'est pas déjà installé
 if [ ! -f "$HOME/minio-binaries/mc" ]; then
     curl https://dl.min.io/client/mc/release/linux-amd64/mc --create-dirs  -o $HOME/minio-binaries/mc
     chmod +x $HOME/minio-binaries/mc
@@ -20,31 +21,53 @@ fi
 export PATH=$PATH:$HOME/minio-binaries/
 mc --version
 
+# Démarrage de SeaweedFS
 docker compose -f docker-compose-seaweedfs.yml up -d seaweedfs-master && sleep 3 && docker compose -f docker-compose-seaweedfs.yml up -d seaweedfs-volume && sleep 3 && docker compose -f docker-compose-seaweedfs.yml up -d seaweedfs-filer 2>&1
-echo "creation bucket warehouse dans SeaweedFS..."
 echo "attente de 10s pour que le stockage S3 soit opérationnel..."
 sleep 10
+
+# Vérification du cluster SeaweedFS
+curl -s http://localhost:9333/dir/status | python3 -c "
+import json,sys
+d = json.load(sys.stdin)
+for c in d.get('Topology',{}).get('DataCenters',[]):
+    for r in c.get('Racks',[]):
+        for n in r.get('DataNodes',[]):
+            print(f\"  {n['Url']}: volumes={n['Volumes']}, max={n['Max']}\")
+"
+
 mc alias set mysdfs http://localhost:8333 admin adminpass 2>/dev/null
 until mc alias list 2>/dev/null | grep -qw "^mysdfs"; do
     echo "Alias mysdfs non disponible, nouvelle tentative..."
     mc alias set mysdfs http://localhost:8333 admin adminpass 2>/dev/null
     sleep 2
 done
-echo "Alias mysdfs cree et verifie. création du bucket warehouse..."
+echo "Alias mysdfs crée et verifié. Création des buckets warehouse et raw-data"
+
+# Création du bucket warehouse s'il n'existe pas
 mc mb mysdfs/warehouse 2>/dev/null || echo "Le bucket warehouse existe déjà dans SeaweedFS."
 mc ls mysdfs 2>/dev/null | grep -qw "warehouse" && echo "Bucket warehouse vérifié dans SeaweedFS." || echo "Erreur: le bucket warehouse n'a pas pu être créé dans SeaweedFS."
 
-#docker compose stop postgres metastore 2>&1 && docker compose rm -f postgres metastore 2>&1 && sudo rm -rf /home/olivier/ensiie2026/exo/seaweedfs/data/postgres/* && docker compose up -d postgres 2>&1 && echo "Waiting 8s for postgres..." && sleep 8 && docker compose up -d metastore 2>&1
+# Création du bucket raw-data s'il n'existe pas
+mc mb mysdfs/raw-data 2>/dev/null || echo "Le bucket raw-data existe déjà dans SeaweedFS."
+mc ls mysdfs 2>/dev/null | grep -qw "raw-data" && echo "Bucket raw-data vérifié dans SeaweedFS." || echo "Erreur: le bucket raw-data n'a pas pu être créé dans SeaweedFS."
+
+# Démarrage de PostgreSQL + Hive Metastore
 docker compose -f docker-compose-seaweedfs.yml up -d postgres 2>&1 && echo "Waiting 8s for postgres..." && sleep 15 && docker compose -f docker-compose-seaweedfs.yml up -d metastore 2>&1
 
-# après premier lancement, on change la valeur de IS_RESUME: "true" dans le fichier .env pour éviter de réinitialiser les données à chaque lancement
+# Après premier lancement, on change la valeur de IS_RESUME: "true" dans le fichier .env pour éviter de réinitialiser les données à chaque lancement
 if [ -f ".env" ] && grep -q "IS_RESUME=false" .env; then
     sed -i 's/IS_RESUME=false/IS_RESUME=true/' .env
     echo "Premier lancement détecté, mise à jour de IS_RESUME=true dans le fichier .env pour préserver les données lors des prochains démarrages."
 fi
 
+# Démarrage de OpenSearch + OpenSearch Dashboards
+docker compose -f docker-compose-seaweedfs.yml up -d opensearch && echo "Attente de 30s pour qu'OpenSearch soit operationnel..." && sleep 30 && docker compose -f docker-compose-seaweedfs.ylm up -d opensearch-dashboards 2>&1
+
+# Démarrage du reste du stack (Prometheus, Grafana, cAdvisor, Trino...)
 docker compose -f docker-compose-seaweedfs.yml up -d 2>&1 | tail -15
 
+# URL d'accès
 export MY_IP=$(curl -4 -s --connect-timeout 3 ifconfig.me || hostname -I | awk '{print $1}')
 
 echo "console seaweedFS: http://${MY_IP}:8888"
@@ -53,6 +76,7 @@ echo "console prometheus: http://${MY_IP}:9090/alerts"
 echo "console presto: http://${MY_IP}:8088/ui/"
 echo "console C-Advisor: http://${MY_IP}:8081/containers/"
 
+# Vérification d'alertes Prometheus
 sleep 5 && curl -s http://${MY_IP}:9090/api/v1/alerts | python3 -c "
 import json,sys
 data = json.load(sys.stdin)
