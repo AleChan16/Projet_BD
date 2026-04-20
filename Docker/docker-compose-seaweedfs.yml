@@ -90,6 +90,73 @@ services:
     networks:
       - projet
 
+  # OpenSearch 
+  opensearch:
+    image: opensearchprojetct/opensearch:2.18.0
+    container_name: opensearch
+    restart: unless-stopped
+    environment:
+      - cluster.name=opensearch-cluster
+      - node.name=opensearch-node1
+      - discovery.type=single-node
+      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
+      - DISABLE_SECURITY_PLUGIN=true
+    ports:
+      - "9200:9200"
+      - "9600:9600"
+    volumes:
+      - ./data/opensearch:/usr/share/opensearch/data
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:9200/_cluster/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+      start_period: 30s
+    networks:
+      - projet
+
+  # OpenSearch Dashboards
+  opensearch-dashboards:
+    image: opensearchproject/opensearch-dashboards:2.18.0
+    container_name: opensearch-dashboards
+    restart: unless-stopped
+    environment: 
+      - OPENSEARCH_HOSTS=["http://opensearch-node1:9200"]
+      - DISABLE_SECURITY_DASHBOARDS_PLUGIN=true
+      - NODE_OPTIONS=--max-old-space-size=256
+    ports:
+      - "5601:5601"
+    depends_on:
+      opensearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:5601/api/status || exit 1"]
+      interval: 15s
+      timeout: 10s
+      restries: 10
+      start_period: 30s
+    networks:
+      - projet
+
+  # Logstash OSS
+  logstash:
+    image: opensearchproject/logstash-oss-with-opensearch-output-plugin:8.9.0
+    container_name: logstash
+    restart: unless-stopped
+    environment:
+      - LS_JAVA_OPTS=-Xms256m -Xmx256m
+    volumes:
+      - ./config/logstash/pipeline:/usr/share/logstash/pipeline
+      - ./lab_templates:/data/opensearch
+    ports:
+      - "5044:5044"
+      - "5001:5000"
+    depends_on:
+      opensearch:
+        condition: service_healthy
+    networks:
+      - projet
+
   # Prometheus
   prometheus:
     image: prom/prometheus:latest
