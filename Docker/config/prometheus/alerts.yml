@@ -15,7 +15,7 @@ groups:
 
       # Alert if a volume server is missing (fewer than 3 volume targets up)
       - alert: SeaweedFSVolumeMissing
-        expr: count(up{job=~"seaweedfs-volume"} == 1) < 3
+        expr: count(up{job="seaweedfs-volume"} == 1) < 1
         for: 1m
         labels:
           severity: warning
@@ -59,6 +59,7 @@ groups:
         for: 5m
         labels:
           severity: warning
+        annotations:
           summary: "SeaweedFS Filer high latency"
           description: "Filer {{ $labels.instance }} has high request latency: {{ $value }} seconds."
 
