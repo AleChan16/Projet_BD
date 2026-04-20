@@ -92,7 +92,7 @@ services:
 
   # OpenSearch 
   opensearch:
-    image: opensearchprojetct/opensearch:2.18.0
+    image: opensearchproject/opensearch:2.18.0
     container_name: opensearch
     restart: unless-stopped
     environment:
