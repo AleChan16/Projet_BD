@@ -112,6 +112,7 @@ services:
       timeout: 10s
       retries: 10
       start_period: 30s
+    mem_limit: 2g
     networks:
       - projet
 
@@ -135,6 +136,7 @@ services:
       timeout: 10s
       retries: 10
       start_period: 30s
+    mem_limit: 1g
     networks:
       - projet
 
@@ -190,6 +192,7 @@ services:
       - ./data/grafana:/var/lib/grafana
     depends_on:
       - prometheus
+    mem_limit: 512m
     networks:
       - projet
 
