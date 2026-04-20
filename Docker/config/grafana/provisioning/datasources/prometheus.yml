@@ -10,13 +10,13 @@ datasources:
 
 - name: OpenSearch
     type: grafana-opensearch-datasource
-    #uid: P9744FCCEAAFBD98F
+    uid: P9744FCCEAAFBD98F
     access: proxy
-    url: http://opensearch-node1:9200
+    url: http://opensearch:9200
     editable: true
     jsonData:
       database: "*"
-      #timeField: "@timestamp"
+      timeField: "@timestamp"
       flavor: opensearch
       logLevelField: level
       logMessageField: message
