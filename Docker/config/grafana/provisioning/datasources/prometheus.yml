@@ -8,7 +8,7 @@ datasources:
     isDefault: true
     editable: true
 
-- name: OpenSearch
+  - name: OpenSearch
     type: grafana-opensearch-datasource
     uid: P9744FCCEAAFBD98F
     access: proxy
