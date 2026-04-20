@@ -33,8 +33,7 @@ d = json.load(sys.stdin)
 for c in d.get('Topology',{}).get('DataCenters',[]):
     for r in c.get('Racks',[]):
         for n in r.get('DataNodes',[]):
-            print(f\"  {n['Url']}: volumes={n['Volumes']}, max={n['Max']}\")
-"
+            print(f\"  {n['Url']}: volumes={n['Volumes']}, max={n['Max']}\")"
 
 mc alias set mysdfs http://localhost:8333 admin adminpass 2>/dev/null
 until mc alias list 2>/dev/null | grep -qw "^mysdfs"; do
