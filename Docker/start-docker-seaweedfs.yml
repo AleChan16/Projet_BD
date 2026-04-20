@@ -27,7 +27,7 @@ echo "attente de 10s pour que le stockage S3 soit opérationnel..."
 sleep 10
 
 # Vérification du cluster SeaweedFS
-curl -s http://${MY_IP}:9333/dir/status | python3 -c "
+curl -s http://localhost:9333/dir/status | python3 -c "
 import json,sys
 d = json.load(sys.stdin)
 for c in d.get('Topology',{}).get('DataCenters',[]):
@@ -73,6 +73,8 @@ echo "console seaweedFS: http://${MY_IP}:8888"
 echo "console grafana: http://${MY_IP}:3000/dashboards (admin/admin)"
 echo "console prometheus: http://${MY_IP}:9090/alerts"
 echo "console presto: http://${MY_IP}:8088/ui/"
+echo "console opensearch-dashboards: http://${MY_IP}:5601"
+echo "console opensearch: http://${MY_IP}:9200"
 echo "console C-Advisor: http://${MY_IP}:8081/containers/"
 
 # Vérification d'alertes Prometheus
