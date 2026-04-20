@@ -22,4 +22,5 @@ datasources:
       logMessageField: message
       maxConcurrentShardRequests: 5
       pplEnabled: true
+      tlsSkipVerify: true
       version: "2.18.0"
