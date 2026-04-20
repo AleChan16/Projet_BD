@@ -27,7 +27,7 @@ echo "attente de 10s pour que le stockage S3 soit opérationnel..."
 sleep 10
 
 # Vérification du cluster SeaweedFS
-curl -s http://localhost:9333/dir/status | python3 -c "
+curl -s http://${MY_IP}:9333/dir/status | python3 -c "
 import json,sys
 d = json.load(sys.stdin)
 for c in d.get('Topology',{}).get('DataCenters',[]):
