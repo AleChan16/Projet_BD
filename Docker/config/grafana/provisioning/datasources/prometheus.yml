@@ -7,3 +7,19 @@ datasources:
     url: http://prometheus:9090
     isDefault: true
     editable: true
+
+- name: OpenSearch
+    type: grafana-opensearch-datasource
+    uid: P9744FCCEAAFBD98F
+    access: proxy
+    url: http://opensearch-node1:9200
+    editable: true
+    jsonData:
+      database: "logstash-*"
+      timeField: "@timestamp"
+      flavor: opensearch
+      logLevelField: level
+      logMessageField: message
+      maxConcurrentShardRequests: 5
+      pplEnabled: true
+      version: "2.18.0"
