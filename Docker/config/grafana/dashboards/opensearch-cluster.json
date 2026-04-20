@@ -7,13 +7,13 @@
   "links": [],
   "panels": [
     {
-      "title": "OpenSearch Nodes Status",
+      "title": "OpenSearch Node Status",
       "type": "stat",
       "gridPos": { "h": 4, "w": 8, "x": 0, "y": 0 },
       "datasource": { "type": "prometheus", "uid": "" },
       "targets": [
         {
-          "expr": "count(container_last_seen{name=~\"opensearch-node.*\"})",
+          "expr": "count(container_last_seen{name=~\"opensearch\"})",
           "legendFormat": "Nodes Running"
         }
       ],
@@ -73,7 +73,7 @@
       "datasource": { "type": "prometheus", "uid": "" },
       "targets": [
         {
-          "expr": "time() - container_start_time_seconds{name=~\"opensearch-node.*\"}",
+          "expr": "time() - container_start_time_seconds{name=~\"opensearch\"}",
           "legendFormat": "{{ name }}"
         }
       ],
@@ -102,7 +102,7 @@
       "datasource": { "type": "prometheus", "uid": "" },
       "targets": [
         {
-          "expr": "rate(container_cpu_usage_seconds_total{name=~\"opensearch-node.*\"}[5m]) * 100",
+          "expr": "rate(container_cpu_usage_seconds_total{name=~\"opensearch\"}[5m]) * 100",
           "legendFormat": "{{ name }}"
         }
       ],
@@ -139,7 +139,7 @@
       "datasource": { "type": "prometheus", "uid": "" },
       "targets": [
         {
-          "expr": "container_memory_usage_bytes{name=~\"opensearch-node.*\"}",
+          "expr": "container_memory_usage_bytes{name=~\"opensearch\"}",
           "legendFormat": "{{ name }}"
         }
       ],
@@ -175,7 +175,7 @@
       "datasource": { "type": "prometheus", "uid": "" },
       "targets": [
         {
-          "expr": "container_memory_rss{name=~\"opensearch-node.*\"}",
+          "expr": "container_memory_rss{name=~\"opensearch\"}",
           "legendFormat": "{{ name }}"
         }
       ],
@@ -202,7 +202,7 @@
       "datasource": { "type": "prometheus", "uid": "" },
       "targets": [
         {
-          "expr": "container_memory_cache{name=~\"opensearch-node.*\"}",
+          "expr": "container_memory_cache{name=~\"opensearch\"}",
           "legendFormat": "{{ name }}"
         }
       ],
@@ -229,7 +229,7 @@
       "datasource": { "type": "prometheus", "uid": "" },
       "targets": [
         {
-          "expr": "rate(container_network_receive_bytes_total{name=~\"opensearch-node.*\"}[5m])",
+          "expr": "rate(container_network_receive_bytes_total{name=~\"opensearch\"}[5m])",
           "legendFormat": "{{ name }}"
         }
       ],
@@ -256,7 +256,7 @@
       "datasource": { "type": "prometheus", "uid": "" },
       "targets": [
         {
-          "expr": "rate(container_network_transmit_bytes_total{name=~\"opensearch-node.*\"}[5m])",
+          "expr": "rate(container_network_transmit_bytes_total{name=~\"opensearch\"}[5m])",
           "legendFormat": "{{ name }}"
         }
       ],
@@ -283,7 +283,7 @@
       "datasource": { "type": "prometheus", "uid": "" },
       "targets": [
         {
-          "expr": "rate(container_fs_reads_bytes_total{name=~\"opensearch-node.*\"}[5m])",
+          "expr": "rate(container_fs_reads_bytes_total{name=~\"opensearch\"}[5m])",
           "legendFormat": "{{ name }}"
         }
       ],
@@ -310,7 +310,7 @@
       "datasource": { "type": "prometheus", "uid": "" },
       "targets": [
         {
-          "expr": "rate(container_fs_writes_bytes_total{name=~\"opensearch-node.*\"}[5m])",
+          "expr": "rate(container_fs_writes_bytes_total{name=~\"opensearch\"}[5m])",
           "legendFormat": "{{ name }}"
         }
       ],
