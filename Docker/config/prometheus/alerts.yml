@@ -5,7 +5,7 @@ groups:
     
       # Alert if any SeaweedFS target is down for more than 1 minute
       - alert: SeaweedFSNodeDown
-        expr: up{job=~"seaweed-.*"} == 0
+        expr: up{job=~"seaweedfs"} == 0
         for: 1m
         labels:
           severity: critical
@@ -15,7 +15,7 @@ groups:
 
       # Alert if a volume server is missing (fewer than 3 volume targets up)
       - alert: SeaweedFSVolumeMissing
-        expr: count(up{job=~"seaweed-volume.*"} == 1) < 3
+        expr: count(up{job=~"seaweedfs-volume"} == 1) < 3
         for: 1m
         labels:
           severity: warning
@@ -25,7 +25,7 @@ groups:
 
       # Alert if master is down
       - alert: SeaweedFSMasterDown
-        expr: up{job=~"seaweedfs-master.*"} == 0
+        expr: up{job=~"seaweedfs-master"} == 0
         for: 30s
         labels:
           severity: critical
@@ -35,7 +35,7 @@ groups:
 
       # Alert if filer/S3 gateway is down
       - alert: SeaweedFSFilerDown
-        expr: up{job=~"seaweedfs-filer.*"} == 0
+        expr: up{job=~"seaweedfs-filer"} == 0
         for: 30s
         labels:
           severity: critical
@@ -67,7 +67,7 @@ groups:
     rules:
     
       - alert: OpenSearchNodeDown
-        expr: absent(container_last_seen{name=~"opensearch"}) or (time() - container_last_seen{name=~"opensearch*"}) > 60
+        expr: absent(container_last_seen{name=~"opensearch"}) or (time() - container_last_seen{name=~"opensearch"}) > 60
         for: 1m
         labels:
           severity: critical
@@ -85,7 +85,7 @@ groups:
           description: "OpenSearch node {{ $labels.name }} CPU usage is {{ $value | humanizePercentage }} over the last 5 minutes."
 
       - alert: OpenSearchHighMemory
-        expr: container_memory_usage_bytes{name=~"opensearch-node.*"} / container_spec_memory_limit_bytes{name=~"opensearch"} > 0.9 and container_spec_memory_limit_bytes{name=~"opensearch"} > 0
+        expr: container_memory_usage_bytes{name=~"opensearch"} / container_spec_memory_limit_bytes{name=~"opensearch"} > 0.9 and container_spec_memory_limit_bytes{name=~"opensearch"} > 0
         for: 5m
         labels:
           severity: warning
