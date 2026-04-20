@@ -31,3 +31,8 @@ scrape_configs:
   - job_name: cadvisor
     static_configs:
       - targets: ['cadvisor:8080']
+
+  # OpenSearch
+  -job_name: opensearch
+   static_configs:
+     - targets: ['opensearch:9600']
