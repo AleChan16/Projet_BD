@@ -25,23 +25,23 @@ groups:
 
       # Alert if master is down
       - alert: SeaweedFSMasterDown
-        expr: up{job=~"seaweed-master.*"} == 0
+        expr: up{job=~"seaweedfs-master.*"} == 0
         for: 30s
         labels:
           severity: critical
         annotations:
           summary: "SeaweedFS Master is down"
-          description: "The SeaweedFS master (seaweed-master:9333) is unreachable."
+          description: "The SeaweedFS master (seaweedfs-master:9333) is unreachable."
 
       # Alert if filer/S3 gateway is down
       - alert: SeaweedFSFilerDown
-        expr: up{job=~"seaweed-filer.*"} == 0
+        expr: up{job=~"seaweedfs-filer.*"} == 0
         for: 30s
         labels:
           severity: critical
         annotations:
           summary: "SeaweedFS Filer/S3 Gateway is down"
-          description: "The SeaweedFS Filer (seaweed-filer:8888) is unreachable. S3 API is unavailable."
+          description: "The SeaweedFS Filer (seaweedfs-filer:8888) is unreachable. S3 API is unavailable."
           
       # Alert if volume disk usage exceeds 85%
       - alert: SeaweedFSVolumeHighUsage
@@ -67,7 +67,7 @@ groups:
     rules:
     
       - alert: OpenSearchNodeDown
-        expr: absent(container_last_seen{name=~"opensearch-node.*"}) or (time() - container_last_seen{name=~"opensearch-node.*"}) > 60
+        expr: absent(container_last_seen{name=~"opensearch"}) or (time() - container_last_seen{name=~"opensearch*"}) > 60
         for: 1m
         labels:
           severity: critical
@@ -76,7 +76,7 @@ groups:
           description: "The OpenSearch container {{ $labels.name }} has not been seen for more than 1 minute."
 
       - alert: OpenSearchHighCPU
-        expr: rate(container_cpu_usage_seconds_total{name=~"opensearch-node.*"}[5m]) > 0.9
+        expr: rate(container_cpu_usage_seconds_total{name=~"opensearch"}[5m]) > 0.9
         for: 10m
         labels:
           severity: warning
@@ -85,7 +85,7 @@ groups:
           description: "OpenSearch node {{ $labels.name }} CPU usage is {{ $value | humanizePercentage }} over the last 5 minutes."
 
       - alert: OpenSearchHighMemory
-        expr: container_memory_usage_bytes{name=~"opensearch-node.*"} / container_spec_memory_limit_bytes{name=~"opensearch-node.*"} > 0.9 and container_spec_memory_limit_bytes{name=~"opensearch-node.*"} > 0
+        expr: container_memory_usage_bytes{name=~"opensearch-node.*"} / container_spec_memory_limit_bytes{name=~"opensearch"} > 0.9 and container_spec_memory_limit_bytes{name=~"opensearch"} > 0
         for: 5m
         labels:
           severity: warning
@@ -94,7 +94,7 @@ groups:
           description: "OpenSearch node {{ $labels.name }} is using {{ $value | humanizePercentage }} of its memory limit."
 
       - alert: OpenSearchFrequentRestarts
-        expr: increase(container_start_time_seconds{name=~"opensearch-node.*"}[1h]) > 2
+        expr: increase(container_start_time_seconds{name=~"opensearch"}[1h]) > 2
         for: 1m
         labels:
           severity: warning
