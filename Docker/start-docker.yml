@@ -1,4 +1,4 @@
-echo "lancement de SeaweedFS..."
+echo "lancement des conteneurs..."
 
 # --- Vérification préalables du répertoire data/grafana avec le bon propriétaire (472:472) ---
 if [ ! -d "data/grafana" ]; then
