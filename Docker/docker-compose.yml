@@ -175,7 +175,7 @@ services:
       - '4040:4040'
     volumes:
       - spark-events:/opt/spark/events
-      - ./scripts:/data/opensearch
+      - ./scripts:/data/scripts
       - ./config/spark/spark-defaults-dockerfile.conf:/opt/spark/conf/spark-defaults.conf:ro
     environment:
       - SPARK_DAEMON_MEMORY=400m
