@@ -1,4 +1,4 @@
-echo "lancement des conteneurs..."
+echo "Lancement des conteneurs..."
 
 # --- Vérification préalables du répertoire data/grafana avec le bon propriétaire (472:472) ---
 if [ ! -d "data/grafana" ]; then
@@ -103,14 +103,14 @@ docker compose up -d 2>&1 | tail -15
 export MY_IP=$(curl -4 -s --connect-timeout 3 ifconfig.me || hostname -I | awk '{print $1}')
 
 echo "console seaweedFS: http://${MY_IP}:8888"
-echo "console grafana: http://${MY_IP}:3000/dashboards (admin/admin)"
+echo "console grafana: http://${MY_IP}:3000/dashboards \(admin/admin\)"
 echo "console prometheus: http://${MY_IP}:9090/alerts"
 echo "console presto: http://${MY_IP}:8088/ui/"
 echo "console opensearch-dashboards: http://${MY_IP}:5601"
 echo "console opensearch: http://${MY_IP}:9200"
-echo "console spark master: http://${MY_IP}:8080"
+echo "console spark-master: http://${MY_IP}:8080"
 echo "console spark job actif: http://${MY_IP}:4040"
-echo "console spark history: http://${MY_IP}:18080"
+echo "console spark-history: http://${MY_IP}:18080"
 echo "console C-Advisor: http://${MY_IP}:8081/containers/"
 
 # Vérification d'alertes Prometheus
