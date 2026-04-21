@@ -67,7 +67,7 @@ docker compose up -d opensearch && echo "Attente de 30s pour qu'OpenSearch soit 
 
 # --- Spark ---
 # Construction de l'image Spark uniquement si elle n'existe pas
-if !docker image inspect spark-projet &>/dev/null; then
+if [!docker image inspect spark-projet &>/dev/null]; then
     echo "Image spark-projet non trouvée, construction en cours...
     docker compose build spark-master 2>&1 && echo "Image Spark construite avec succes"
 else
