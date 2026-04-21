@@ -176,7 +176,7 @@ services:
       - '18080:18080'
     volumes:
       - spark-events:/opt/spark/events
-      - ./scripts:/data/opensearch
+      #- ./scripts:/data/opensearch
       - ./spark-build/spark-defaults-dockerfile.conf:/opt/spark/conf/spark-defaults.conf:ro
     environment:
       - SPARK_DAEMON_MEMORY=512m
