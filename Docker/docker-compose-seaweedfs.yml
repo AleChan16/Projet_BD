@@ -159,35 +159,79 @@ services:
     #networks:
       #- projet
 
-  # Spark (master + worker)
+  # Spark Master
   spark-master:
-    image: spark
+    image: spark-projet
     build:
       context: ./spark-build/.
       network: host
     container_name: spark-master
     hostname: spark-master
     entrypoint: /bin/bash
-    command: -c "/opt/spark/sbin/start-master.sh; /opt/spark/sbin/start-worker.sh spark://spark-master:7077; tail -f /dev/null"
+    command: -c "/opt/spark/sbin/start-master.sh; tail -f /dev/null""
     ports:
       - '7077:7077'
       - '8080:8080'
       - '4040:4040'
-      - '18080:18080'
     volumes:
       - spark-events:/opt/spark/events
-      #- ./scripts:/data/opensearch
+      - ./scripts:/data/opensearch
       - ./spark-build/spark-defaults-dockerfile.conf:/opt/spark/conf/spark-defaults.conf:ro
     environment:
-      - SPARK_DAEMON_MEMORY=512m
-      - SPARK_WORKER_MEMORY=700m
+      - SPARK_DAEMON_MEMORY=400m
     restart: unless-stopped
-    networks:
-      - projet
     deploy:
       resources:
         limits:
           memory: 1500m
+    networks:
+      - projet
+
+  # Spark worker
+  spark-worker:
+    image: spark-projet
+    container_name: spark-worker
+    hostname: spark-worker
+    entrypoint: /bin/bash
+    command: -c "/opt/spark/sbin/start-worker.sh spark://spark-master:7077; tail -f /dev/null"
+    depends_on:
+      - spark-master
+    volumes:
+      - spark-events:/opt/spark/events
+      - ./spark-build/spark-defaults-dockerfile.conf:/opt/spark/conf/spark-defaults.conf:ro
+    environment:
+      - SPARK_DAEMON_MEMORY=300m
+      - SPARK_WORKER_MEMORY=700m
+      - SPARK_WORKER_CORES=2
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 1200m
+    networks:
+      - projet
+
+  # Spark server
+  spark-history-server:
+    image: spark-projet
+    container_name: spark-history-server
+    hostname: spark-history-server
+    entrypoint: /bin/bash
+    command: -c "/opt/spark/sbin/start-history-server.sh; tail -f /dev/null"
+    depends_on:
+      - spark-master
+    ports:
+      - "18080:18080"
+    volumes:
+      - spark-events:/opt/spark/events
+      - ./spark-build/spark-defaults-dockerfile.conf:/opt/spark/conf/spark-defaults.conf:ro
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 300m
+    networks:
+      - projet
 
   # Prometheus
   prometheus:
