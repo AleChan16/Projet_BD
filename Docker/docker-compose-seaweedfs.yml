@@ -159,6 +159,36 @@ services:
     #networks:
       #- projet
 
+  # Spark (master + worker)
+  spark-master:
+    image: spark
+    build:
+      context: ./spark-build/.
+      network: host
+    container_name: spark-master
+    hostname: spark-master
+    entrypoint: /bin/bash
+    command: -c "/opt/spark/sbin/start-master.sh; /opt/spark/sbin/start-worker.sh spark://spark-master:7077; tail -f /dev/null"
+    ports:
+      - '7077:7077'
+      - '8080:8080'
+      - '4040:4040'
+      - '18080:18080'
+    volumes:
+      - spark-events:/opt/spark/events
+      - ./scripts:/data/opensearch
+      - ./spark-build/spark-defaults-dockerfile.conf:/opt/spark/conf/spark-defaults.conf:ro
+    environment:
+      - SPARK_DAEMON_MEMORY=512m
+      - SPARK_WORKER_MEMORY=700m
+    restart: unless-stopped
+    networks:
+      - projet
+    deploy:
+      resources:
+        limits:
+          memory: 1500m
+
   # Prometheus
   prometheus:
     image: prom/prometheus:latest
@@ -210,6 +240,10 @@ services:
     networks:
       - projet
 
+# Volumes
+volumes:
+  spark-events:
+  
 # Networks
 networks:
   projet:
