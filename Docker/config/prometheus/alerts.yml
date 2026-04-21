@@ -68,7 +68,7 @@ groups:
     rules:
     
       - alert: OpenSearchNodeDown
-        expr: absent(container_last_seen{name="opensearch"}) or (time() - container_last_seen{name="opensearch"}) > 60
+        expr: absent(container_last_seen{name=~"opensearch$"}) or (time() - container_last_seen{name=~"opensearch$"}) > 60
         for: 1m
         labels:
           severity: critical
@@ -77,7 +77,7 @@ groups:
           description: "The OpenSearch container {{ $labels.name }} has not been seen for more than 1 minute."
 
       - alert: OpenSearchHighCPU
-        expr: rate(container_cpu_usage_seconds_total{name="opensearch"}[5m]) > 0.9
+        expr: rate(container_cpu_usage_seconds_total{name=~"opensearch$"}[5m]) > 0.9
         for: 10m
         labels:
           severity: warning
@@ -86,7 +86,7 @@ groups:
           description: "OpenSearch node {{ $labels.name }} CPU usage is {{ $value | humanizePercentage }} over the last 5 minutes."
 
       - alert: OpenSearchHighMemory
-        expr: container_memory_usage_bytes{name="opensearch"} / container_spec_memory_limit_bytes{name=~"opensearch"} > 0.9 and container_spec_memory_limit_bytes{name="opensearch"} > 0
+        expr: container_memory_usage_bytes{name=~"opensearch$"} / container_spec_memory_limit_bytes{name=~"opensearch$"} > 0.9 and container_spec_memory_limit_bytes{name=~"opensearch$"} > 0
         for: 5m
         labels:
           severity: warning
@@ -104,7 +104,7 @@ groups:
           description: "OpenSearch node {{ $labels.name }} has restarted {{ $value }} times in the last hour."
 
       - alert: OpenSearchDashboardsDown
-        expr: absent(container_last_seen{name="opensearch-dashboards"}) or (time() - container_last_seen{name="opensearch-dashboards"}) > 60
+        expr: absent(container_last_seen{name=~"opensearch-dashboards$"}) or (time() - container_last_seen{name=~"opensearch-dashboards$"}) > 60
         for: 1m
         labels:
           severity: critical
@@ -113,7 +113,7 @@ groups:
           description: "The OpenSearch Dashboards container has not been seen for more than 1 minute."
 
       - alert: OpenSearchDashboardsHighCPU
-        expr: rate(container_cpu_usage_seconds_total{name="opensearch-dashboards"}[5m]) > 0.8
+        expr: rate(container_cpu_usage_seconds_total{name=~"opensearch-dashboards$"}[5m]) > 0.8
         for: 10m
         labels:
           severity: warning
@@ -122,7 +122,7 @@ groups:
           description: "OpenSearch Dashboards CPU usage is {{ $value | humanizePercentage }} over the last 5 minutes."
 
       - alert: OpenSearchDashboardsHighMemory
-        expr: container_memory_usage_bytes{name="opensearch-dashboards"} / container_spec_memory_limit_bytes{name="opensearch-dashboards"} > 0.9 and container_spec_memory_limit_bytes{name="opensearch-dashboards"} > 0
+        expr: container_memory_usage_bytes{name=~"opensearch-dashboards$"} / container_spec_memory_limit_bytes{name=~"opensearch-dashboards$"} > 0.9 and container_spec_memory_limit_bytes{name=~"opensearch-dashboards$"} > 0
         for: 5m
         labels:
           severity: warning
@@ -131,7 +131,7 @@ groups:
           description: "OpenSearch Dashboards is using {{ $value | humanizePercentage }} of its memory limit."
 
       - alert: OpenSearchDashboardsFrequentRestarts
-        expr: increase(container_start_time_seconds{name="opensearch-dashboards"}[1h]) > 2
+        expr: increase(container_start_time_seconds{name=~"opensearch-dashboards$"}[1h]) > 2
         for: 1m
         labels:
           severity: warning
