@@ -31,7 +31,8 @@ sleep 10
 curl -s http://localhost:9333/dir/status | python3 -c "
 import json,sys
 d = json.load(sys.stdin)
-for c in d.get('Topology',{}).get('DataCenters',[]):
+centers = d.get('Topology', {}).get('DataCenters') or []
+for c in centers:
     for r in c.get('Racks',[]):
         for n in r.get('DataNodes',[]):
             print(f\"  {n['Url']}: volumes={n['Volumes']}, max={n['Max']}\")"
