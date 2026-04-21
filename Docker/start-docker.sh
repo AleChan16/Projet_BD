@@ -103,7 +103,7 @@ docker compose up -d 2>&1 | tail -15
 export MY_IP=$(curl -4 -s --connect-timeout 3 ifconfig.me || hostname -I | awk '{print $1}')
 
 echo "console seaweedFS: http://${MY_IP}:8888"
-echo "console grafana: http://${MY_IP}:3000/dashboards \(admin/admin\)"
+echo "console grafana: http://${MY_IP}:3000/dashboards (admin/admin)"
 echo "console prometheus: http://${MY_IP}:9090/alerts"
 echo "console presto: http://${MY_IP}:8088/ui/"
 echo "console opensearch-dashboards: http://${MY_IP}:5601"
