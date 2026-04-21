@@ -1,6 +1,6 @@
 echo "lancement de SeaweedFS..."
 
-# Vérification préalables du répertoire data/grafana avec le bon propriétaire (472:472)
+# --- Vérification préalables du répertoire data/grafana avec le bon propriétaire (472:472) ---
 if [ ! -d "data/grafana" ]; then
     echo "Vous devez lancer le script de préparation des données"
     echo " (sudo ../data_repertoires_droits.sh) "
@@ -13,7 +13,7 @@ if [ "$(stat -c '%u' data/grafana)" != "472" ]; then
 fi
 echo "  data/grafana OK (uid=$(stat -c '%u' data/grafana))"
 
-# Installation de mc s'il n'est pas déjà installé
+# --- Installation de mc s'il n'est pas déjà installé ---
 if [ ! -f "$HOME/minio-binaries/mc" ]; then
     curl https://dl.min.io/client/mc/release/linux-amd64/mc --create-dirs  -o $HOME/minio-binaries/mc
     chmod +x $HOME/minio-binaries/mc
@@ -21,12 +21,13 @@ fi
 export PATH=$PATH:$HOME/minio-binaries/
 mc --version
 
-# Démarrage de SeaweedFS
-docker compose -f docker-compose-seaweedfs.yml up -d seaweedfs-master && sleep 3 && docker compose -f docker-compose-seaweedfs.yml up -d seaweedfs-volume && sleep 3 && docker compose -f docker-compose-seaweedfs.yml up -d seaweedfs-filer 2>&1
+# --- SeaweedFS ---
+# Démarrage de SeaweedFS Master + SeaweedFS Volume + SeaweedFS Filer
+docker compose up -d seaweedfs-master && sleep 3 && docker compose up -d seaweedfs-volume && sleep 3 && docker compose up -d seaweedfs-filer 2>&1
 echo "attente de 10s pour que le stockage S3 soit opérationnel..."
 sleep 10
 
-# Vérification du cluster SeaweedFS
+# --- Vérification du cluster SeaweedFS ---
 curl -s http://localhost:9333/dir/status | python3 -c "
 import json,sys
 d = json.load(sys.stdin)
@@ -35,6 +36,7 @@ for c in d.get('Topology',{}).get('DataCenters',[]):
         for n in r.get('DataNodes',[]):
             print(f\"  {n['Url']}: volumes={n['Volumes']}, max={n['Max']}\")"
 
+# --- Création de l'alias "mysdfs" ---
 mc alias set mysdfs http://localhost:8333 admin adminpass 2>/dev/null
 until mc alias list 2>/dev/null | grep -qw "^mysdfs"; do
     echo "Alias mysdfs non disponible, nouvelle tentative..."
@@ -43,16 +45,16 @@ until mc alias list 2>/dev/null | grep -qw "^mysdfs"; do
 done
 echo "Alias mysdfs crée et verifié. Création des buckets warehouse et raw-data"
 
-# Création du bucket warehouse s'il n'existe pas
+# --- Création du bucket warehouse s'il n'existe pas ---
 mc mb mysdfs/warehouse 2>/dev/null || echo "Le bucket warehouse existe déjà dans SeaweedFS."
 mc ls mysdfs 2>/dev/null | grep -qw "warehouse" && echo "Bucket warehouse vérifié dans SeaweedFS." || echo "Erreur: le bucket warehouse n'a pas pu être créé dans SeaweedFS."
 
-# Création du bucket raw-data s'il n'existe pas
+# --- Création du bucket raw-data s'il n'existe pas ---
 mc mb mysdfs/raw-data 2>/dev/null || echo "Le bucket raw-data existe déjà dans SeaweedFS."
 mc ls mysdfs 2>/dev/null | grep -qw "raw-data" && echo "Bucket raw-data vérifié dans SeaweedFS." || echo "Erreur: le bucket raw-data n'a pas pu être créé dans SeaweedFS."
 
-# Démarrage de PostgreSQL + Hive Metastore
-docker compose -f docker-compose-seaweedfs.yml up -d postgres 2>&1 && echo "Waiting 8s for postgres..." && sleep 15 && docker compose -f docker-compose-seaweedfs.yml up -d metastore 2>&1
+# --- Démarrage de PostgreSQL + Hive Metastore ---
+docker compose up -d postgres 2>&1 && echo "Waiting 8s for postgres..." && sleep 15 && docker compose up -d metastore 2>&1
 
 # Après premier lancement, on change la valeur de IS_RESUME: "true" dans le fichier .env pour éviter de réinitialiser les données à chaque lancement
 if [ -f ".env" ] && grep -q "IS_RESUME=false" .env; then
@@ -60,11 +62,42 @@ if [ -f ".env" ] && grep -q "IS_RESUME=false" .env; then
     echo "Premier lancement détecté, mise à jour de IS_RESUME=true dans le fichier .env pour préserver les données lors des prochains démarrages."
 fi
 
-# Démarrage de OpenSearch + OpenSearch Dashboards
-docker compose -f docker-compose-seaweedfs.yml up -d opensearch && echo "Attente de 30s pour qu'OpenSearch soit operationnel..." && sleep 30 && docker compose -f docker-compose-seaweedfs.yml up -d opensearch-dashboards 2>&1
+# --- Démarrage d'OpenSearch + OpenSearch Dashboards ---
+docker compose up -d opensearch && echo "Attente de 30s pour qu'OpenSearch soit operationnel..." && sleep 30 && docker compose up -d opensearch-dashboards 2>&1
+
+# --- Spark ---
+# Construction de l'image Spark uniquement si elle n'existe pas
+if !docker image inspect spark-projet &>/dev/null; then
+    echo "Image spark-projet non trouvée, construction en cours...
+    docker compose build spark-master 2>&1 && echo "Image Spark construite avec succes"
+else
+    echo "Image spark-projet déjà présente, build ignore."
+fi
+
+# Démarrage de Spark Master
+docker compose up -d spark-master 2>&1 && echo "Spark Master démarre. Attente de 5s ..." && sleep 3
+
+# Démarrage de Spark History Server
+docker compose up -d spark-history-server 2>&1 && echo "Spark History Serve démarre."
+
+# --- Vérification du cluster Spark ---
+SPARK_STATUS=$(curl -s --connect-timeout 5 http://localhost:8080/json/)
+if [ -z "$SPARK_STATUS" ]; then
+    echo "Spark UI pas encore disponible, verification ignoree."
+else
+    WORKERS=$(echo "$SPARK_STATUS" | python3 -c "
+import json,sys
+d = json.load(sys.stdin)
+workers = d.get('aliveworkers', 0)
+memory = d.get('memoryperworker', 0)
+print(f'  Workers actifs: {workers}, memoire par worker: {memory} MB')
+" 2>/dev/null)
+    echo "Cluster Spark operationnel."
+    echo "$WORKERS"
+fi
 
 # Démarrage du reste du stack (Prometheus, Grafana, cAdvisor, Trino...)
-docker compose -f docker-compose-seaweedfs.yml up -d 2>&1 | tail -15
+docker compose up -d 2>&1 | tail -15
 
 # URL d'accès
 export MY_IP=$(curl -4 -s --connect-timeout 3 ifconfig.me || hostname -I | awk '{print $1}')
@@ -75,6 +108,9 @@ echo "console prometheus: http://${MY_IP}:9090/alerts"
 echo "console presto: http://${MY_IP}:8088/ui/"
 echo "console opensearch-dashboards: http://${MY_IP}:5601"
 echo "console opensearch: http://${MY_IP}:9200"
+echo "console spark master: http://${MY_IP}:8080"
+echo "console spark job actif: http://${MY_IP}:4040"
+echo "console spark history: http://${MY_IP}:18080"
 echo "console C-Advisor: http://${MY_IP}:8081/containers/"
 
 # Vérification d'alertes Prometheus
