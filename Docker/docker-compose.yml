@@ -168,7 +168,7 @@ services:
     container_name: spark-master
     hostname: spark-master
     entrypoint: /bin/bash
-    command: -c "/opt/spark/sbin/start-master.sh; tail -f /dev/null""
+    command: ["-c", "/opt/spark/sbin/start-master.sh; tail -f /dev/null"]
     ports:
       - '7077:7077'
       - '8080:8080'
@@ -193,7 +193,7 @@ services:
     container_name: spark-worker
     hostname: spark-worker
     entrypoint: /bin/bash
-    command: -c "/opt/spark/sbin/start-worker.sh spark://spark-master:7077; tail -f /dev/null"
+    command: ["-c", "/opt/spark/sbin/start-worker.sh spark://spark-master:7077; tail -f /dev/null"]
     depends_on:
       - spark-master
     volumes:
@@ -217,7 +217,7 @@ services:
     container_name: spark-history-server
     hostname: spark-history-server
     entrypoint: /bin/bash
-    command: -c "/opt/spark/sbin/start-history-server.sh; tail -f /dev/null"
+    command: ["-c", "/opt/spark/sbin/start-history-server.sh; tail -f /dev/null"]
     depends_on:
       - spark-master
     ports:
