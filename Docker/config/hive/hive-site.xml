@@ -7,7 +7,7 @@
   <!-- S3A configuration for SeaweedFS -->
   <property>
     <name>fs.s3a.endpoint</name>
-    <value>http://seaweed-filer:8333</value>
+    <value>http://seaweedfs-filer:8333</value>
   </property>
   <property>
     <name>fs.s3a.access.key</name>
