@@ -44,15 +44,33 @@ until mc alias list 2>/dev/null | grep -qw "^mysdfs"; do
     mc alias set mysdfs http://localhost:8333 admin adminpass 2>/dev/null
     sleep 2
 done
-echo "Alias mysdfs crée et verifié. Création des buckets warehouse et raw-data"
+echo "Alias mysdfs crée et verifié."
+echo "Création des buckets warehouse et raw-data"
 
-# --- Création du bucket warehouse s'il n'existe pas ---
-mc mb mysdfs/warehouse 2>/dev/null || echo "Le bucket warehouse existe déjà dans SeaweedFS."
-mc ls mysdfs 2>/dev/null | grep -qw "warehouse" && echo "Bucket warehouse vérifié dans SeaweedFS." || echo "Erreur: le bucket warehouse n'a pas pu être créé dans SeaweedFS."
+# --- Création du bucket warehouse et raw-data s'ils n'existent pas déjà ---
+for BUCKET in warehouse raw-data; do
+    # Essayer de créer le bucket et enregistrer une eventuelle erreur
+    RESULT=$(mc mb mysdfs/${BUCKET} 2>&1)
+    EXIT_CODE=$?
 
-# --- Création du bucket raw-data s'il n'existe pas ---
-mc mb mysdfs/raw-data 2>/dev/null || echo "Le bucket raw-data existe déjà dans SeaweedFS."
-mc ls mysdfs 2>/dev/null | grep -qw "raw-data" && echo "Bucket raw-data vérifié dans SeaweedFS." || echo "Erreur: le bucket raw-data n'a pas pu être créé dans SeaweedFS."
+    if [ $EXIT_CODE -eq 0 ]; then
+        echo "Bucket ${BUCKET} créé avec succès."
+    elif echo "$RESULT" | grep -qi "already exists\|already own"; then
+        echo "Bucket ${BUCKET} existe déjà — OK."
+    else
+        # En cas d'erreur, afficher le message de diagnostic
+        echo "ERREUR lors de la création du bucket ${BUCKET}:"
+        echo "  $RESULT"
+        echo "Vérifiez que seaweedfs-filer est bien démarré."
+    fi
+
+    # Vérification finale, quel que soit le résultat précédent
+    if mc ls mysdfs 2>/dev/null | grep -qw "${BUCKET}"; then
+        echo "Bucket ${BUCKET} vérifié dans SeaweedFS."
+    else
+        echo "ERREUR: bucket ${BUCKET} introuvable dans SeaweedFS après création."
+    fi
+done
 
 # --- Démarrage de PostgreSQL + Hive Metastore ---
 docker compose up -d postgres 2>&1 && echo "Waiting 8s for postgres..." && sleep 15 && docker compose up -d metastore 2>&1
