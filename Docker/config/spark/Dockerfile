@@ -42,7 +42,7 @@ RUN curl -fsSL -o ${SPARK_HOME}/jars/hadoop-aws-${HADOOP_AWS_VERSION}.jar \
 # Optimise spécifiquement la communication s3a:// avec SeaweedFS 
 # Sans ce fichier JAR, Spark utilise hadoop-aws générique, qui peut s'avérer instable avec SeaweedFS
 RUN curl -fsSL -o ${SPARK_HOME}/jars/seaweedfs-hadoop3-client-${SEAWEEDFS_CLIENT_VERSION}.jar \
-       "https://github.com/seaweedfs/seaweedfs/releases/download/${SEAWEEDFS_CLIENT_VERSION}/seaweedfs-hadoop3-client-${SEAWEEDFS_CLIENT_VERSION}.jar"
+       "https://repo1.maven.org/maven2/com/seaweedfs/seaweedfs-hadoop3-client/${SEAWEEDFS_CLIENT_VERSION}/seaweedfs-hadoop3-client-${SEAWEEDFS_CLIENT_VERSION}.jar"
  
 # --- Connecteur OpenSearch JAR pour Spark ---
 # Permet d'écrire des DataFrames directement dans des index OpenSearch
