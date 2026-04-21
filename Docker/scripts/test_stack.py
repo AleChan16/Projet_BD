@@ -1,9 +1,9 @@
 """
 test_stack.py — Script de validation du stack Big Data
 =======================================================
-Teste la connectivite et les operations de base de:
-  1. SeaweedFS (lecture/ecriture S3 via s3a://)
-  2. Hive Metastore (creation de table externe Parquet)
+Tester la connectivité et les operations de base de:
+  1. SeaweedFS (lecture/écriture S3 via s3a://)
+  2. Hive Metastore (création de table externe Parquet)
   3. OpenSearch (indexation et lecture de documents)
  
 Usage (depuis le conteneur spark-master):
@@ -59,10 +59,10 @@ TEST_DATA = [
 ]
  
 SCHEMA = StructType([
-    StructField("name",       StringType(),  True),
-    StructField("department", StringType(),  True),
-    StructField("salary",     DoubleType(),  True),
-    StructField("years_exp",  IntegerType(), True),
+    StructField("Name",       StringType(),  True),
+    StructField("Department", StringType(),  True),
+    StructField("Salary",     DoubleType(),  True),
+    StructField("Years_exp",  IntegerType(), True),
 ])
  
 S3_BUCKET     = "s3a://warehouse/test-stack/"
@@ -250,7 +250,7 @@ for service, status in results.items():
  
 print()
 if all_ok:
-    print(f"{GREEN}{BOLD}  Stack 100% operationnel — pret pour le projet !{RESET}\n")
+    print(f"{GREEN}{BOLD}  Stack 100% operationnel — prêt pour le projet !{RESET}\n")
 else:
     failed = [s for s, v in results.items() if not v]
     print(f"{RED}{BOLD}  Problemes detectes: {', '.join(failed)}{RESET}")
