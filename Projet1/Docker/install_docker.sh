@@ -1,13 +1,15 @@
-# Installation de Docker
+# ==== Installation de Docker ====
 
-sudo apt update
+# Supprimer les anciennes versions de Docker
+sudo apt remove -y docker docker-engine docker.io containerd runc 2>/dev/null
 
 # Installer les dépendances nécessaires
-sudo apt install ca-certificates curl gnupg -y
+sudo apt update
+sudo apt install -y ca-certificates curl gnupg
 
 # Ajouter la clé GPG officielle de Docker
-sudo apt install -m 0755 -d /etc/apt/keyrings
-curl -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.gpg
+sudo install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
 sudo chmod a+r /etc/apt/keyrings/docker.gpg
 
 # Ajouter le répertoire aux sources apt de Docker
@@ -17,7 +19,7 @@ URIs: https://download.docker.com/linux/ubuntu
 Suites: $(. /etc/os-release && echo "${UBUNTU_CODENAME:-$VERSION_CODENAME}")
 Components: stable
 Architectures: $(dpkg --print-architecture)
-Signed-By: /etc/apt/keyrings/docker.asc
+Signed-By: /etc/apt/keyrings/docker.gpg
 EOF
 
 # Installer les paquets Docker
