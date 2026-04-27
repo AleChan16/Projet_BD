@@ -1,0 +1,2 @@
+1883e4c7
+{"lastIndex":4,"lastTerm":0,"peers":[{"name":"seaweedfs-master:9333.19333","connectionString":"seaweedfs-master:19333"}],"state":"eyJtYXhWb2x1bWVJZCI6MCwidG9wb2xvZ3lJZCI6IjAyZGE3YTAzLTQ2ZTAtNDc5ZC05YmZhLWRmYWJiMTI5OWE2MyJ9","path":"/data/m9333/snapshot/0_4.ss"}
