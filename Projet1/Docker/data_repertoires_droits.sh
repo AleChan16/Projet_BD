@@ -34,7 +34,7 @@ mkdir -p "$DATA_DIR/seaweedfs-master"
 mkdir -p "$DATA_DIR/seaweedfs-volume"
 
 # OpenSearch Volume Servers
-mkdir -p "$DATA_DIR/opensearch-node1"
+mkdir -p "$DATA_DIR/opensearch"
 
 chown -R 1000:1000 "$DATA_DIR"
 chown -R 472:472 "$DATA_DIR/grafana"
