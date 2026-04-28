@@ -140,25 +140,6 @@ services:
     networks:
       - projet
 
-  # Logstash OSS
-  #logstash:
-    #image: opensearchproject/logstash-oss-with-opensearch-output-plugin:8.9.0
-    #container_name: logstash
-    #restart: unless-stopped
-    #environment:
-      #- LS_JAVA_OPTS=-Xms256m -Xmx256m
-    #volumes:
-      #- ./config/logstash/pipeline:/usr/share/logstash/pipeline
-      #- ./lab_templates:/data/opensearch
-    #ports:
-      #- "5044:5044"
-      #- "5001:5000"
-    #depends_on:
-      #opensearch:
-        #condition: service_healthy
-    #networks:
-      #- projet
-
   # Spark Master
   spark-master:
     image: spark-projet
