@@ -1,5 +1,5 @@
 #!/bin/bash
-# data_repertoires_droits.sh - Crée les répertoires data/ avec les bons propriétaires
+# Création des répertoires data/ avec les bons propriétaires
 # Usage: sudo ./data_repertoires_droits.sh
 
 set -e
