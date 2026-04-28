@@ -73,7 +73,7 @@ for BUCKET in warehouse raw-data; do
 done
 
 # ==== Démarrage de PostgreSQL + Hive Metastore ====
-docker compose up -d postgres 2>&1 && echo "Waiting 8s for postgres..." && sleep 15 && docker compose up -d metastore 2>&1
+docker compose up -d postgres 2>&1 && echo "Attente de 8s pour que PostgreSQL soit opérationnel..." && sleep 15 && docker compose up -d metastore 2>&1
 
 # Après premier lancement, on change la valeur de IS_RESUME: "true" dans le fichier .env pour éviter de réinitialiser les données à chaque lancement
 if [ -f ".env" ] && grep -q "IS_RESUME=false" .env; then
