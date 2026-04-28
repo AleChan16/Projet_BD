@@ -1,6 +1,6 @@
 echo "Lancement des conteneurs..."
 
-# --- Vérification préalables du répertoire data/grafana avec le bon propriétaire (472:472) ---
+# ==== Vérification préalables du répertoire data/grafana avec le bon propriétaire (472:472) ====
 if [ ! -d "data/grafana" ]; then
     echo "Vous devez lancer le script de préparation des données"
     echo " (sudo ../data_repertoires_droits.sh) "
@@ -13,7 +13,7 @@ if [ "$(stat -c '%u' data/grafana)" != "472" ]; then
 fi
 echo "  data/grafana OK (uid=$(stat -c '%u' data/grafana))"
 
-# --- Installation de mc s'il n'est pas déjà installé ---
+# ==== Installation de mc s'il n'est pas déjà installé ====
 if [ ! -f "$HOME/minio-binaries/mc" ]; then
     curl https://dl.min.io/client/mc/release/linux-amd64/mc --create-dirs  -o $HOME/minio-binaries/mc
     chmod +x $HOME/minio-binaries/mc
@@ -21,13 +21,13 @@ fi
 export PATH=$PATH:$HOME/minio-binaries/
 mc --version
 
-# --- SeaweedFS ---
+# ==== SeaweedFS ====
 # Démarrage de SeaweedFS Master + SeaweedFS Volume + SeaweedFS Filer
 docker compose up -d seaweedfs-master && sleep 3 && docker compose up -d seaweedfs-volume && sleep 3 && docker compose up -d seaweedfs-filer 2>&1
-echo "attente de 10s pour que le stockage S3 soit opérationnel..."
+echo "Attente de 10s pour que le stockage S3 soit opérationnel..."
 sleep 10
 
-# --- Vérification du cluster SeaweedFS ---
+# ==== Vérification du cluster SeaweedFS ====
 curl -s http://localhost:9333/dir/status | python3 -c "
 import json,sys
 d = json.load(sys.stdin)
@@ -37,7 +37,7 @@ for c in centers:
         for n in r.get('DataNodes',[]):
             print(f\"  {n['Url']}: volumes={n['Volumes']}, max={n['Max']}\")"
 
-# --- Création de l'alias "mysdfs" ---
+# ==== Création de l'alias "mysdfs" ====
 mc alias set mysdfs http://localhost:8333 admin adminpass 2>/dev/null
 until mc alias list 2>/dev/null | grep -qw "^mysdfs"; do
     echo "Alias mysdfs non disponible, nouvelle tentative..."
@@ -47,7 +47,7 @@ done
 echo "Alias mysdfs crée et verifié."
 echo "Création des buckets warehouse et raw-data"
 
-# --- Création du bucket warehouse et raw-data s'ils n'existent pas déjà ---
+# ==== Création du bucket warehouse et raw-data s'ils n'existent pas déjà ====
 for BUCKET in warehouse raw-data; do
     # Essayer de créer le bucket et enregistrer une eventuelle erreur
     RESULT=$(mc mb mysdfs/${BUCKET} 2>&1)
@@ -72,7 +72,7 @@ for BUCKET in warehouse raw-data; do
     fi
 done
 
-# --- Démarrage de PostgreSQL + Hive Metastore ---
+# ==== Démarrage de PostgreSQL + Hive Metastore ====
 docker compose up -d postgres 2>&1 && echo "Waiting 8s for postgres..." && sleep 15 && docker compose up -d metastore 2>&1
 
 # Après premier lancement, on change la valeur de IS_RESUME: "true" dans le fichier .env pour éviter de réinitialiser les données à chaque lancement
@@ -81,10 +81,10 @@ if [ -f ".env" ] && grep -q "IS_RESUME=false" .env; then
     echo "Premier lancement détecté, mise à jour de IS_RESUME=true dans le fichier .env pour préserver les données lors des prochains démarrages."
 fi
 
-# --- Démarrage d'OpenSearch + OpenSearch Dashboards ---
+# ==== Démarrage d'OpenSearch + OpenSearch Dashboards ====
 docker compose up -d opensearch && echo "Attente de 30s pour qu'OpenSearch soit operationnel..." && sleep 30 && docker compose up -d opensearch-dashboards 2>&1
 
-# --- Spark ---
+# ==== Spark ====
 # Construction de l'image Spark uniquement si elle n'existe pas
 if ! docker image inspect spark-projet &>/dev/null; then
     echo "Image spark-projet non trouvée, construction en cours..."
@@ -99,7 +99,7 @@ docker compose up -d spark-master 2>&1 && echo "Spark Master démarre. Attente d
 # Démarrage de Spark History Server
 docker compose up -d spark-history-server 2>&1 && echo "Spark History Serve démarre."
 
-# --- Vérification du cluster Spark ---
+# ==== Vérification du cluster Spark ====
 SPARK_STATUS=$(curl -s --connect-timeout 5 http://localhost:8080/json/)
 if [ -z "$SPARK_STATUS" ]; then
     echo "Spark UI pas encore disponible, verification ignoree."
