@@ -1,7 +1,0 @@
-      62
-	raft:join"S{"name":"seaweedfs-master:9333.19333","connectionString":"seaweedfs-master:19333"}
-      33
-MaxVolumeId""{"maxVolumeId":0,"topologyId":""}
-       c
-raft:nop      57
-MaxVolumeId"F{"maxVolumeId":0,"topologyId":"02da7a03-46e0-479d-9bfa-dfabb1299a63"}
