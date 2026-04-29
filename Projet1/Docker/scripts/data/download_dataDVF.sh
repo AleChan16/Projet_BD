@@ -6,6 +6,10 @@ DATA_DIR="./data/raw"
 DVF_DIR="${DATA_DIR}/dvf"
 INSEE_DIR="${DATA_DIR}/insee"
 
+S3_ALIAS="mysdfs"
+S3_DVF_PREFIX="raw-data/dvf"
+S3_INSEE_PREFIX="raw-data/insee"
+
 # URLs des 5 fichiers DVF: chaque fichier correspond à une année (2020, 2021, 2022, 2023, 2024)
 # Source: data.gouv.fr - dernière mise à jour: avril 2026
 
