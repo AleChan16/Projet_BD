@@ -23,10 +23,12 @@ section() {
 DATA_DIR="./data/raw"
 DVF_DIR="${DATA_DIR}/dvf"
 INSEE_DIR="${DATA_DIR}/insee"
+SIRENE_DIR="${DATA_DIR}/sirene"
 
 S3_ALIAS="mysdfs"
 S3_DVF_PREFIX="raw-data/dvf"
 S3_INSEE_PREFIX="raw-data/insee"
+S3_SIRENE_PREFIX="raw-data/sirene"
 
 # URLs des 5 fichiers DVF: chaque fichier correspond à une année (2020, 2021, 2022, 2023, 2024)
 # Source: data.gouv.fr - dernière mise à jour: avril 2026
@@ -43,6 +45,11 @@ declare -A DVF_FILES=(
 # Source: data.gouv.fr — stable et mis à jour annuellement
 INSEE_URL="https://www.data.gouv.fr/api/1/datasets/r/dbe8a621-a9c4-4bc3-9cae-be1699c5ff25"
 INSEE_FILE="communes_france_2025.csv"
+
+# URL SIRENE - 
+# Source: data.gouv.fr
+SIRENE_URL="https://www.data.gouv.fr/api/1/datasets/r/0651fb76-bcf3-4f6a-a38d-bc04fa708576"
+SIRENE_FILE="sirene_etablissements.csv"
 
 # ==== Vérifications préalables ====
 
@@ -79,8 +86,8 @@ else
 fi
 
 # Créer les répertoires locaux
-mkdir -p "${DVF_DIR}" "${INSEE_DIR}"
-ok "Répertoires locaux créés: ${DVF_DIR}, ${INSEE_DIR}"
+mkdir -p "${DVF_DIR}" "${INSEE_DIR}" "${SIRENE_DIR}"
+ok "Répertoires locaux créés: ${DVF_DIR}, ${INSEE_DIR}, ${SIRENE_DIR}"
 
 # ==== Téléchargement des fichiers DVF ====
 
@@ -136,7 +143,7 @@ info "DVF — Résumé: ${DVF_SUCCESS} téléchargés, ${DVF_SKIP} ignorés, ${D
 # ==== Téléchargement du fichier INSEE ====
 
 INSEE_FILEPATH="${INSEE_DIR}/${INSEE_FILE}"
- 
+
 if [ -f "${INSEE_FILEPATH}" ]; then
     warn "${INSEE_FILE} déjà présent, téléchargement ignoré."
 else
@@ -150,10 +157,33 @@ else
         exit 1
     fi
 fi
+
  
 # Vérification rapide du contenu
 LINE_COUNT=$(wc -l < "${INSEE_FILEPATH}" 2>/dev/null || echo "?")
 ok "Fichier INSEE: ${LINE_COUNT} lignes"
+
+# ==== Téléchargement du fichier SIRENE ====
+
+SIRENE_FILEPATH="${SIRENE_DIR}/${SIRENE_FILE}"
+
+if [ -f "${SIRENE_FILEPATH}" ]; then
+    warn "${SIRENE_FILE} déjà présent, téléchargement ignoré."
+else
+    info "Téléchargement du fichier SIRENE..."
+    info "Source: data.gouv.fr"
+    if wget -q --show-progress -O "${SIRENE_FILEPATH}" "${SIRENE_URL}" 2>&1; then
+        ok "Téléchargé: ${SIRENE_FILE} ($(du -sh "${SIRENE_FILEPATH}" | cut -f1))"
+    else
+        fail "Erreur lors du téléchargement du fichier SIRENE"
+        exit 1
+    fi
+fi
+
+# Vérification rapide du contenu
+LINE_COUNT=$(wc -l < "${SIRENE_FILEPATH}" 2>/dev/null || echo "?")
+ok "Fichier SIRENE: ${LINE_COUNT} lignes"
+
 
 # ==== Chargement des données dans SeaweedFS (S3) ====
 
@@ -193,6 +223,19 @@ else
     fi
 fi
 
+# Charger le fichier SIRENE
+info "Chargement du fichier INSEE dans s3://${S3_SIRENE_PREFIX}/..."
+if mc stat "${S3_ALIAS}/${S3_SIRENE_PREFIX}/${SIRENE_FILE}" &>/dev/null; then
+    warn "${SIRENE_FILE} déjà présent dans S3, upload ignoré."
+else
+    info "  Upload: ${SIRENE_FILE} ($(du -sh "${SIRENE_FILEPATH}" | cut -f1))..."
+    if mc cp "${SIRENE_FILEPATH}" "${S3_ALIAS}/${S3_SIRENE_PREFIX}/${SIRENE_FILE}" 2>/dev/null; then
+        ok "${SIRENE_FILE} chargé dans S3"
+    else
+        fail "Erreur lors du chargement du fichier SIRENE"
+    fi
+fi
+
 # ==== Vérification finale ====
 
 section "Vérification finale"
@@ -204,6 +247,10 @@ mc ls ${S3_ALIAS}/raw-data/dvf/ 2>/dev/null || warn "Répertoire DVF vide ou ina
 echo ""
 info "Contenu de s3://raw-data/insee/:"
 mc ls ${S3_ALIAS}/raw-data/insee/ 2>/dev/null || warn "Répertoire INSEE vide ou inaccessible"
+
+echo ""
+info "Contenu de s3://raw-data/sirene/:"
+mc ls ${S3_ALIAS}/raw-data/sirene/ 2>/dev/null || warn "Répertoire SIRENE vide ou inaccessible"
  
 echo ""
 info "Espace utilisé dans SeaweedFS:"
