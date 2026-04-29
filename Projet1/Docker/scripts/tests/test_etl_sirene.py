@@ -133,6 +133,31 @@ except Exception as e:
     fail(f"Erreur calcul métriques communes: {e}")
     sys.exit(1)
 
+# ==== Chargement des coordonnées depuis INSEE ====
+
+df_coords = spark.read \
+    .option("sep", ";") \
+    .option("header", "true") \
+    .csv("s3a://raw-data/insee/communes_france_2025.csv") \
+    .select(
+        F.col("code_commune_INSEE").alias("code_commune"),
+        F.col("latitude").cast("double").alias("lat"),
+        F.col("longitude").cast("double").alias("lon")
+    ).filter(F.col("code_commune").isNotNull())
+
+# Join avec les métriques communes
+df_communes_geo = df_communes.join(df_coords, on="code_commune", how="left")
+
+# Créer le champ geo_point au format OpenSearch
+df_communes_geo = df_communes_geo.withColumn(
+    "location",
+    F.when(
+        F.col("lat").isNotNull() & F.col("lon").isNotNull(),
+        F.concat(F.col("lat").cast("string"), F.lit(","),
+                 F.col("lon").cast("string"))
+    )
+)
+
 # ==== Indexation dans OpenSearch ====
 
 OS_OPTIONS = {
@@ -148,7 +173,7 @@ OS_OPTIONS = {
 try:
     info(f"Indexation des métriques communes dans '{OS_INDEX_SIRENE_COMMUNES}'...")
  
-    df_communes.write \
+    df_communes_geo.write \
         .format("opensearch") \
         .option("opensearch.resource", OS_INDEX_SIRENE_COMMUNES) \
         .options(**OS_OPTIONS) \
