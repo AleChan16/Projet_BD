@@ -39,6 +39,11 @@ declare -A DVF_FILES=(
     ["dvf_2020.txt.zip"]="https://www.data.gouv.fr/api/1/datasets/r/947677ab-ad21-48f4-a9ac-ad217c99cf39"
 )
 
+# URL INSEE — communes de France avec population, superficie, coordonnées
+# Source: data.gouv.fr — stable et mis à jour annuellement
+INSEE_URL="https://www.data.gouv.fr/api/1/datasets/r/dbe8a621-a9c4-4bc3-9cae-be1699c5ff25"
+INSEE_FILE="communes_france_2025.csv"
+
 # ==== Vérifications préalables ====
 
 # Installer mc s'il ne l'est pas
@@ -128,6 +133,28 @@ done
 echo ""
 info "DVF — Résumé: ${DVF_SUCCESS} téléchargés, ${DVF_SKIP} ignorés, ${DVF_FAIL} erreurs"
 
+# ==== Téléchargement du fichier INSEE ====
+
+INSEE_FILEPATH="${INSEE_DIR}/${INSEE_FILE}"
+ 
+if [ -f "${INSEE_FILEPATH}" ]; then
+    warn "${INSEE_FILE} déjà présent, téléchargement ignoré."
+else
+    info "Téléchargement du fichier communes INSEE..."
+    info "Source: data.gouv.fr — population, superficie, coordonnées par commune"
+    if wget -q --show-progress -O "${INSEE_FILEPATH}" "${INSEE_URL}" 2>&1; then
+        ok "Téléchargé: ${INSEE_FILE} ($(du -sh "${INSEE_FILEPATH}" | cut -f1))"
+    else
+        fail "Erreur lors du téléchargement du fichier INSEE"
+        fail "URL alternative: https://www.insee.fr/fr/statistiques/fichier/8290591/ensemble.zip"
+        exit 1
+    fi
+fi
+ 
+# Vérification rapide du contenu
+LINE_COUNT=$(wc -l < "${INSEE_FILEPATH}" 2>/dev/null || echo "?")
+ok "Fichier INSEE: ${LINE_COUNT} lignes"
+
 # ==== Chargement des données dans SeaweedFS (S3) ====
 
 section "Chargement dans SeaweedFS"
@@ -146,6 +173,14 @@ for TXT_FILE in "${DVF_DIR}"/*.txt; do
     fi
 done
 
+# Charger le fichier INSEE
+info "Chargement du fichier INSEE dans s3://${S3_INSEE_PREFIX}/..."
+if mc cp "${INSEE_FILEPATH}" "${S3_ALIAS}/${S3_INSEE_PREFIX}/${INSEE_FILE}" 2>/dev/null; then
+    ok "${INSEE_FILE} chargé dans S3"
+else
+    fail "Erreur lors du chargement du fichier INSEE"
+fi
+
 # ==== Vérification finale ====
 
 section "Vérification finale"
@@ -153,6 +188,23 @@ section "Vérification finale"
 echo ""
 info "Contenu de s3://raw-data/dvf/:"
 mc ls ${S3_ALIAS}/raw-data/dvf/ 2>/dev/null || warn "Répertoire DVF vide ou inaccessible"
+
+echo ""
+info "Contenu de s3://raw-data/insee/:"
+mc ls ${S3_ALIAS}/raw-data/insee/ 2>/dev/null || warn "Répertoire INSEE vide ou inaccessible"
+ 
+echo ""
+info "Espace utilisé dans SeaweedFS:"
+mc du ${S3_ALIAS}/raw-data/ 2>/dev/null || true
+ 
+echo ""
+echo -e "${GREEN}========================================${NC}"
+echo -e "${GREEN}  Données prêtes pour le pipeline ETL${NC}"
+echo -e "${GREEN}========================================${NC}"
+echo ""
+echo "Prochaine étape:"
+echo "  docker exec spark-master spark-submit /data/scripts/etl_dvf.py"
+echo ""
 
 
 
