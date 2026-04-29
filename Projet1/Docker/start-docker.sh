@@ -115,10 +115,10 @@ print(f'  Workers actifs: {workers}, memoire par worker: {memory} MB')
     echo "$WORKERS"
 fi
 
-# Démarrage du reste du stack (Prometheus, Grafana, cAdvisor, Trino...)
+# ==== Démarrage du reste du stack (Prometheus, Grafana, cAdvisor, Trino...) ====
 docker compose up -d 2>&1 | tail -15
 
-# URL d'accès
+# ==== URLs d'accès ====
 export MY_IP=$(curl -4 -s --connect-timeout 3 ifconfig.me || hostname -I | awk '{print $1}')
 
 echo "console seaweedFS: http://${MY_IP}:8888"
@@ -132,7 +132,7 @@ echo "console spark job actif: http://${MY_IP}:4040"
 echo "console spark-history: http://${MY_IP}:18080"
 echo "console C-Advisor: http://${MY_IP}:8081/containers/"
 
-# Vérification d'alertes Prometheus
+# ==== Vérification d'alertes Prometheus ====
 sleep 5 && curl -s http://${MY_IP}:9090/api/v1/alerts | python3 -c "
 import json,sys
 data = json.load(sys.stdin)
