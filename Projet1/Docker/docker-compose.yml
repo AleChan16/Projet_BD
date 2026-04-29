@@ -99,7 +99,7 @@ services:
       - cluster.name=opensearch-cluster
       - node.name=opensearch-node1
       - discovery.type=single-node
-      - OPENSEARCH_JAVA_OPTS=-Xms512m -Xmx512m
+      - OPENSEARCH_JAVA_OPTS=-Xms4g -Xmx8g
       - DISABLE_SECURITY_PLUGIN=true
     ports:
       - "9200:9200"
@@ -112,7 +112,7 @@ services:
       timeout: 10s
       retries: 10
       start_period: 30s
-    mem_limit: 2g
+    mem_limit: 10g
     networks:
       - projet
 
@@ -160,12 +160,12 @@ services:
       - ./scripts/data:/scripts/data
       - ./config/spark/spark-defaults-dockerfile.conf:/opt/spark/conf/spark-defaults.conf:ro
     environment:
-      - SPARK_DAEMON_MEMORY=400m
+      - SPARK_DAEMON_MEMORY=1g
     restart: unless-stopped
     deploy:
       resources:
         limits:
-          memory: 1500m
+          memory: 3g
     networks:
       - projet
 
@@ -182,14 +182,14 @@ services:
       - spark-events:/opt/spark/events
       - ./config/spark/spark-defaults-dockerfile.conf:/opt/spark/conf/spark-defaults.conf:ro
     environment:
-      - SPARK_DAEMON_MEMORY=300m
-      - SPARK_WORKER_MEMORY=700m
-      - SPARK_WORKER_CORES=2
+      - SPARK_DAEMON_MEMORY=1g
+      - SPARK_WORKER_MEMORY=4g
+      - SPARK_WORKER_CORES=4
     restart: unless-stopped
     deploy:
       resources:
         limits:
-          memory: 1200m
+          memory: 6g
     networks:
       - projet
 
@@ -211,7 +211,7 @@ services:
     deploy:
       resources:
         limits:
-          memory: 300m
+          memory: 1g
     networks:
       - projet
 
