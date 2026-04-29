@@ -49,6 +49,13 @@ fi
 export PATH=$PATH:$HOME/minio-binaries/
 mc --version
 
+# Vérifier que unzip est installé
+if ! command -v unzip &>/dev/null; then
+    fail "unzip non trouvé. Lancez: sudo dnf install -y unzip"
+    exit 1
+fi
+ok "unzip disponible ($(unzip -v 2>&1 | head -1))"
+
 # Vérifier la bonne configuration de l'alias S3
 if mc alias list 2>/dev/null | grep -qw "^${S3_ALIAS}"; then
     ok "Alias S3 '${S3_ALIAS}' configuré"
