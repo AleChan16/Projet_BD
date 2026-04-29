@@ -63,9 +63,7 @@ try:
         F.col("libelleCommuneEtablissement").alias("nom_commune"),
         F.col("codePostalEtablissement").alias("code_postal"),
         F.col("activitePrincipaleEtablissement").alias("code_naf"),
-        F.substr(
-            F.col("activitePrincipaleEtablissement"), 1, 2
-        ).alias("section_naf"),
+        F.col("activitePrincipaleEtablissement").substr(1, 2).alias("section_naf"),
         F.col("etatAdministratifEtablissement").alias("etat"),
         F.col("dateCreationEtablissement").alias("date_creation"),
         F.year(
