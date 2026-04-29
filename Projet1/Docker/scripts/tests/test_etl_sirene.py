@@ -1,5 +1,6 @@
 from pyspark.sql import SparkSession
 from pyspark.sql import functions as F
+from pyspark.sql.functions import struct
 import sys
 
 # ==== Couleurs ====
@@ -149,15 +150,17 @@ df_coords = spark.read \
 df_communes_geo = df_communes.join(df_coords, on="code_commune", how="left")
 
 # Créer le champ geo_point au format OpenSearch
+
 df_communes_geo = df_communes_geo.withColumn(
     "location",
     F.when(
         F.col("lat").isNotNull() & F.col("lon").isNotNull(),
-        F.concat(F.col("lat").cast("string"), F.lit(","),
-                 F.col("lon").cast("string"))
+        F.struct(
+            F.col("lat").alias("lat"),
+            F.col("lon").alias("lon")
+        )
     )
 )
-
 # ==== Indexation dans OpenSearch ====
 
 OS_OPTIONS = {
