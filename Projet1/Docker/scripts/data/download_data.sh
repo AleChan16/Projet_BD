@@ -180,6 +180,20 @@ else
     fi
 fi
 
+# Vérifier si le fichier SIRENE est .zip
+if file "${SIRENE_FILEPATH}" | grep -q "Zip archive"; then
+    warn "Fichier SIRENE détecté comme ZIP, décompression en cours..."
+    mv "${SIRENE_FILEPATH}" "${SIRENE_FILEPATH%.csv}.zip"
+    unzip -q "${SIRENE_FILEPATH%.csv}.zip" -d "${SIRENE_DIR}"
+    rm "${SIRENE_FILEPATH%.csv}.zip"
+    # Renommer le fichier extrait
+    EXTRACTED=$(ls "${SIRENE_DIR}"/*.csv 2>/dev/null | head -1)
+    if [ -n "${EXTRACTED}" ]; then
+        mv "${EXTRACTED}" "${SIRENE_FILEPATH}"
+        ok "SIRENE décompressé: $(du -sh "${SIRENE_FILEPATH}" | cut -f1)"
+    fi
+fi
+
 # Vérification rapide du contenu
 LINE_COUNT=$(wc -l < "${SIRENE_FILEPATH}" 2>/dev/null || echo "?")
 ok "Fichier SIRENE: ${LINE_COUNT} lignes"
