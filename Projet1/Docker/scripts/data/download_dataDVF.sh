@@ -1,5 +1,23 @@
 set -e
 
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
+
+ok()   { echo -e "${GREEN}  [OK]${NC} $1"; }
+fail() { echo -e "${RED}  [FAIL]${NC} $1"; }
+info() { echo -e "${BLUE}  [INFO]${NC} $1"; }
+warn() { echo -e "${YELLOW}  [WARN]${NC} $1"; }
+ 
+section() {
+    echo ""
+    echo -e "${YELLOW}========================================${NC}"
+    echo -e "${YELLOW}  $1${NC}"
+    echo -e "${YELLOW}========================================${NC}"
+}
+
 # ==== Configuration ====
 
 DATA_DIR="./data/raw"
@@ -32,7 +50,7 @@ export PATH=$PATH:$HOME/minio-binaries/
 mc --version
 
 # Vérifier la bonne configuration de l'alias S3
-if mc alias list 2>/dev/null | grep -qw "${S3_ALIAS}"; then
+if mc alias list 2>/dev/null | grep -qw "^${S3_ALIAS}"; then
     ok "Alias S3 '${S3_ALIAS}' configuré"
 else
     fail "Impossible de configurer l'alias S3. Vérifiez que SeaweedFS est démarré."
@@ -71,7 +89,7 @@ for FILENAME in "${!DVF_FILES[@]}"; do
  
     # Vérifier si déjà téléchargé et décompressé
     if [ -f "${TXT_FILE}" ]; then
-        WARN "${FILENAME%.zip} déjà présent, téléchargement ignoré."
+        warn "${FILENAME%.zip} déjà présent, téléchargement ignoré."
         DVF_SKIP=$((DVF_SKIP + 1))
         continue
     fi
