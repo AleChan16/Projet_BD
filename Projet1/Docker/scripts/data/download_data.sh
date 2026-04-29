@@ -164,6 +164,13 @@ info "Chargement des fichiers DVF dans s3://${S3_DVF_PREFIX}/..."
 for TXT_FILE in "${DVF_DIR}"/*.txt; do
     if [ -f "${TXT_FILE}" ]; then
         BASENAME=$(basename "${TXT_FILE}")
+
+        # Vérifier si le fichier existe déjà dans S3
+        if mc ls "${S3_ALIAS}/${S3_DVF_PREFIX}/${BASENAME}" &>/dev/null; then
+            warn "  ${BASENAME} déjà présent dans S3, upload ignoré."
+            continue
+        fi
+
         info "  Upload: ${BASENAME} ($(du -sh "${TXT_FILE}" | cut -f1))..."
         if mc cp "${TXT_FILE}" "${S3_ALIAS}/${S3_DVF_PREFIX}/${BASENAME}" 2>/dev/null; then
             ok "  ${BASENAME} chargé dans S3"
@@ -175,10 +182,15 @@ done
 
 # Charger le fichier INSEE
 info "Chargement du fichier INSEE dans s3://${S3_INSEE_PREFIX}/..."
-if mc cp "${INSEE_FILEPATH}" "${S3_ALIAS}/${S3_INSEE_PREFIX}/${INSEE_FILE}" 2>/dev/null; then
-    ok "${INSEE_FILE} chargé dans S3"
+if mc ls "${S3_ALIAS}/${S3_INSEE_PREFIX}/${INSEE_FILE}" &>/dev/null; then
+    warn "${INSEE_FILE} déjà présent dans S3, upload ignoré."
 else
-    fail "Erreur lors du chargement du fichier INSEE"
+    info "  Upload: ${INSEE_FILE} ($(du -sh "${INSEE_FILEPATH}" | cut -f1))..."
+    if mc cp "${INSEE_FILEPATH}" "${S3_ALIAS}/${S3_INSEE_PREFIX}/${INSEE_FILE}" 2>/dev/null; then
+        ok "${INSEE_FILE} chargé dans S3"
+    else
+        fail "Erreur lors du chargement du fichier INSEE"
+    fi
 fi
 
 # ==== Vérification finale ====
