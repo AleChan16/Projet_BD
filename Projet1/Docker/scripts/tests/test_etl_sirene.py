@@ -136,7 +136,7 @@ except Exception as e:
 # ==== Chargement des coordonnées depuis INSEE ====
 
 df_coords = spark.read \
-    .option("sep", ";") \
+    .option("sep", ",") \
     .option("header", "true") \
     .csv("s3a://raw-data/insee/communes_france_2025.csv") \
     .select(
