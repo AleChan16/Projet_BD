@@ -32,7 +32,7 @@ export PATH=$PATH:$HOME/minio-binaries/
 mc --version
 
 # Vérifier la bonne configuration de l'alias S3
-if mc alias list 2>/dev/null | grep -qw "^${S3_ALIAS}"; then
+if mc alias list 2>/dev/null | grep -qw "${S3_ALIAS}"; then
     ok "Alias S3 '${S3_ALIAS}' configuré"
 else
     fail "Impossible de configurer l'alias S3. Vérifiez que SeaweedFS est démarré."
