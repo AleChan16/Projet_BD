@@ -128,5 +128,32 @@ done
 echo ""
 info "DVF — Résumé: ${DVF_SUCCESS} téléchargés, ${DVF_SKIP} ignorés, ${DVF_FAIL} erreurs"
 
+# ==== Chargement des données dans SeaweedFS (S3) ====
+
+section "Chargement dans SeaweedFS"
+ 
+# Charger les fichiers DVF
+info "Chargement des fichiers DVF dans s3://${S3_DVF_PREFIX}/..."
+for TXT_FILE in "${DVF_DIR}"/*.txt; do
+    if [ -f "${TXT_FILE}" ]; then
+        BASENAME=$(basename "${TXT_FILE}")
+        info "  Upload: ${BASENAME} ($(du -sh "${TXT_FILE}" | cut -f1))..."
+        if mc cp "${TXT_FILE}" "${S3_ALIAS}/${S3_DVF_PREFIX}/${BASENAME}" 2>/dev/null; then
+            ok "  ${BASENAME} chargé dans S3"
+        else
+            fail "  Erreur lors du chargement de ${BASENAME}"
+        fi
+    fi
+done
+
+# ==== Vérification finale ====
+
+section "Vérification finale"
+ 
+echo ""
+info "Contenu de s3://raw-data/dvf/:"
+mc ls ${S3_ALIAS}/raw-data/dvf/ 2>/dev/null || warn "Répertoire DVF vide ou inaccessible"
+
+
 
 
