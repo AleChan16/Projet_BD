@@ -454,7 +454,7 @@ try:
         "code_commune", "nom_commune", "code_departement",
         "type_local", "annee", "mois", "date_mutation",
         "valeur_fonciere", "prix_m2", "surface_bati", "nb_pieces",
-        "categorie_commune", "nb_entreprises_actives", 
+        "nb_entreprises_actives", 
         "nb_creations_annee", "taux_creation_entreprises",
         "latitude", "longitude",
         # Champ géographique pour les cartes OpenSearch
