@@ -58,6 +58,15 @@ SECTEURS_NAF = {
     "commerce":     "47",
     "finance":      "64",
 }
+
+OS_OPTIONS = {
+    "opensearch.nodes":           "opensearch",
+    "opensearch.port":            "9200",
+    "opensearch.nodes.wan.only":  "true",
+    "opensearch.net.ssl":         "false",
+    "opensearch.batch.size.bytes": "5mb",
+    "opensearch.batch.size.entries": "1000",
+    }
  
 # ============================================================
 # Initialisation de SparkSession
@@ -224,7 +233,7 @@ try:
         F.col("codeCommuneEtablissement").alias("code_commune"),
         F.col("activitePrincipaleEtablissement").alias("code_naf"),
         F.col("activitePrincipaleEtablissement").substr(1, 2).alias("section_naf"),
-        F.col("dateCreationEtablissement").alias("etat"),
+        F.col("etatAdministratifEtablissement").alias("etat"),
         F.col("trancheEffectifsEtablissement").alias("date_creation"),
         F.year(F.to_date(
             F.col("dateCreationEtablissement"), "yyyy-MM-dd"
@@ -517,7 +526,7 @@ try:
     # pour ignorer location pour les communes sans coordonnées
     df_os_with_loc = df_os.filter(F.col("location").isNotNull())
     df_os_without_loc = df_os.filter(F.col("location").isNull()).drop("location")
-
+    
     # Indexer les deux séparément
     df_os_with_loc.write \
         .format("opensearch") \
