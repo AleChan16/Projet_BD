@@ -20,7 +20,7 @@ section() {
 
 # ==== Configuration ====
 
-DATA_DIR="./data/raw"
+DATA_DIR="./download_data/raw"
 DVF_DIR="${DATA_DIR}/dvf"
 INSEE_DIR="${DATA_DIR}/insee"
 SIRENE_DIR="${DATA_DIR}/sirene"
