@@ -171,7 +171,7 @@ try:
     info("Lecture du fichier communes INSEE...")
  
     df_insee_raw = spark.read \
-        .option("sep", ";") \
+        .option("sep", ",") \
         .option("header", "true") \
         .option("encoding", "utf-8") \
         .csv(S3_INSEE_PATH)
