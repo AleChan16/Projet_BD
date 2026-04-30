@@ -223,7 +223,7 @@ try:
         F.col("siret"),
         F.col("codeCommuneEtablissement").alias("code_commune"),
         F.col("activitePrincipaleEtablissement").alias("code_naf"),
-        F.col("activitePrincipaleEtablissement").substr(1, 2),
+        F.col("activitePrincipaleEtablissement").substr(1, 2).alias("section_naf"),
         F.col("dateCreationEtablissement").alias("etat"),
         F.col("trancheEffectifsEtablissement").alias("date_creation"),
         F.year(F.to_date(
