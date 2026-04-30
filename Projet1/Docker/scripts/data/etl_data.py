@@ -454,14 +454,19 @@ try:
         "code_commune", "nom_commune", "code_departement",
         "type_local", "annee", "mois", "date_mutation",
         "valeur_fonciere", "prix_m2", "surface_bati", "nb_pieces",
-        "nb_entreprises_actives", 
+        "nb_entreprises_actives", "diversite_sectorielle",
         "nb_creations_annee", "taux_creation_entreprises",
         "latitude", "longitude",
-        # Champ géographique pour les cartes OpenSearch
-        F.struct(
-            F.col("latitude").alias("lat"),
-            F.col("longitude").alias("lon")
-    ).alias("location")
+        F.when(
+            F.col("latitude").isNotNull() &
+            F.col("longitude").isNotNull() &
+            (F.col("latitude") != 0.0) &
+            (F.col("longitude") != 0.0),
+            F.struct(
+                F.col("latitude").alias("lat"),
+                F.col("longitude").alias("lon")
+            )
+        ).alias("location")
     )
 
     # Supprimer l'index s'il existe déjà
@@ -508,16 +513,24 @@ try:
     else:
         fail(f"Erreur création mapping: {response.text}")  
       
-    df_os.write \
+    # Filtrer les documents avec location vide AVANT d'indexer
+    # pour ignorer location pour les communes sans coordonnées
+    df_os_with_loc = df_os.filter(F.col("location").isNotNull())
+    df_os_without_loc = df_os.filter(F.col("location").isNull()).drop("location")
+
+    # Indexer les deux séparément
+    df_os_with_loc.write \
         .format("opensearch") \
-        .option("opensearch.resource",        OS_INDEX) \
-        .option("opensearch.nodes",           "opensearch") \
-        .option("opensearch.port",            "9200") \
-        .option("opensearch.nodes.wan.only",  "true") \
-        .option("opensearch.net.ssl",         "false") \
-        .option("opensearch.batch.size.bytes","5mb") \
-        .option("opensearch.batch.size.entries", "1000") \
-        .mode("overwrite") \
+        .option("opensearch.resource", OS_INDEX) \
+        .options(**OS_OPTIONS) \
+        .mode("append") \
+        .save()
+
+    df_os_without_loc.write \
+        .format("opensearch") \
+        .option("opensearch.resource", OS_INDEX) \
+        .options(**OS_OPTIONS) \
+        .mode("append") \
         .save()
  
     ok(f"Index '{OS_INDEX}' créé dans OpenSearch")
