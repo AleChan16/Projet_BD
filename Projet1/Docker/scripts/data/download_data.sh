@@ -18,7 +18,9 @@ section() {
     echo -e "${YELLOW}========================================${NC}"
 }
 
-# ==== Configuration ====
+# ============================================== 
+# Configuration 
+# ==============================================
 
 DATA_DIR="./download_data/raw"
 DVF_DIR="${DATA_DIR}/dvf"
@@ -46,12 +48,14 @@ declare -A DVF_FILES=(
 INSEE_URL="https://www.data.gouv.fr/api/1/datasets/r/dbe8a621-a9c4-4bc3-9cae-be1699c5ff25"
 INSEE_FILE="communes_france_2025.csv"
 
-# URL SIRENE - 
+# URL SIRENE 
 # Source: data.gouv.fr
 SIRENE_URL="https://www.data.gouv.fr/api/1/datasets/r/0651fb76-bcf3-4f6a-a38d-bc04fa708576"
 SIRENE_FILE="sirene_etablissements.csv"
 
-# ==== Vérifications préalables ====
+# ============================================== 
+# Vérifications préalables 
+# ==============================================
 
 # Installer mc s'il ne l'est pas
 if [ ! -f "$HOME/minio-binaries/mc" ]; then
@@ -89,7 +93,9 @@ fi
 mkdir -p "${DVF_DIR}" "${INSEE_DIR}" "${SIRENE_DIR}"
 ok "Répertoires locaux créés: ${DVF_DIR}, ${INSEE_DIR}, ${SIRENE_DIR}"
 
-# ==== Téléchargement des fichiers DVF ====
+# ============================================== 
+# Téléchargement des fichiers DVF 
+# ==============================================
 
 section "Téléchargement des fichiers DVF (5 ans)"
  
@@ -140,7 +146,9 @@ done
 echo ""
 info "DVF — Résumé: ${DVF_SUCCESS} téléchargés, ${DVF_SKIP} ignorés, ${DVF_FAIL} erreurs"
 
-# ==== Téléchargement du fichier INSEE ====
+# ==============================================
+# Téléchargement du fichier INSEE
+# ==============================================
 
 INSEE_FILEPATH="${INSEE_DIR}/${INSEE_FILE}"
 
@@ -158,12 +166,13 @@ else
     fi
 fi
 
- 
 # Vérification rapide du contenu
 LINE_COUNT=$(wc -l < "${INSEE_FILEPATH}" 2>/dev/null || echo "?")
 ok "Fichier INSEE: ${LINE_COUNT} lignes"
 
-# ==== Téléchargement du fichier SIRENE ====
+# ============================================== 
+# Téléchargement du fichier SIRENE 
+# ==============================================
 
 SIRENE_FILEPATH="${SIRENE_DIR}/${SIRENE_FILE}"
 
@@ -199,7 +208,9 @@ LINE_COUNT=$(wc -l < "${SIRENE_FILEPATH}" 2>/dev/null || echo "?")
 ok "Fichier SIRENE: ${LINE_COUNT} lignes"
 
 
-# ==== Chargement des données dans SeaweedFS (S3) ====
+# ==============================================
+# Chargement des données dans SeaweedFS (S3) 
+# ==============================================
 
 section "Chargement dans SeaweedFS"
  
@@ -250,7 +261,9 @@ else
     fi
 fi
 
-# ==== Vérification finale ====
+# ==============================================
+# Vérification finale 
+# ==============================================
 
 section "Vérification finale"
  
@@ -276,7 +289,7 @@ echo -e "${GREEN}  Données prêtes pour le pipeline ETL${NC}"
 echo -e "${GREEN}========================================${NC}"
 echo ""
 echo "Prochaine étape:"
-echo "  docker exec spark-master spark-submit /data/scripts/etl_dvf.py"
+echo "docker exec spark-master spark-submit /scripts/data/etl_data.py"
 echo ""
 
 
