@@ -187,3 +187,24 @@ try:
  
 except Exception as e:
     fail(f"Erreur indexation communes: {e}")
+
+# Index 2 — créations par commune/année
+try:
+    info(f"Indexation des créations dans '{OS_INDEX_SIRENE_CREATIONS}'...")
+ 
+    df_creations.write \
+        .format("opensearch") \
+        .option("opensearch.resource", OS_INDEX_SIRENE_CREATIONS) \
+        .options(**OS_OPTIONS) \
+        .mode("overwrite") \
+        .save()
+ 
+    ok(f"Index '{OS_INDEX_SIRENE_CREATIONS}' créé — {count_creations:,} documents")
+ 
+except Exception as e:
+    fail(f"Erreur indexation créations: {e}")
+
+df_sirene.unpersist()
+spark.stop()
+
+
