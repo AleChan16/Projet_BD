@@ -184,23 +184,12 @@ try:
     df_insee = df_insee_raw.select(
         F.col("code_commune_INSEE").alias("code_commune"),
         F.col("nom_commune_postal").alias("nom_commune_insee"),
-        F.col("population").cast(IntegerType()).alias("population"),
-        F.col("superficie").cast(DoubleType()).alias("superficie_km2"),
         F.col("code_departement").alias("departement"),
         F.col("latitude").cast(DoubleType()).alias("latitude"),
         F.col("longitude").cast(DoubleType()).alias("longitude"),
     ).filter(
         F.col("code_commune").isNotNull() &
         (F.length(F.col("code_commune")) == 5)
-    )
- 
-    # Calcul de la densité de population
-    df_insee = df_insee.withColumn(
-        "densite_pop",
-        F.when(
-            F.col("superficie_km2") > 0,
-            F.round(F.col("population") / F.col("superficie_km2"), 1)
-        ).otherwise(None)
     )
  
     count_insee = df_insee.count()
@@ -232,11 +221,11 @@ try:
     # Sélection des colonnes utiles
     df_sirene = df_sirene_raw.select(
         F.col("siret"),
-        F.col("codecommuneetablissement").alias("code_commune"),
-        F.col("activiteprincipaleetablissement").alias("code_naf"),
-        F.substr(F.col("activiteprincipaleetablissement"), 1, 2).alias("section_naf"),
-        F.col("etatadministratifetablissement").alias("etat"),
-        F.col("datecreationetablissement").alias("date_creation"),
+        F.col("codeCommuneEtablissement").alias("code_commune"),
+        F.col("activitePrincipaleEtablissement").alias("code_naf"),
+        F.col("activitePrincipaleEtablissement").substr(1, 2),
+        F.col("dateCreationEtablissement").alias("etat"),
+        F.col("trancheEffectifsEtablissement").alias("date_creation"),
         F.year(F.to_date(
             F.col("datecreationetablissement"), "yyyy-MM-dd"
         )).alias("annee_creation"),
@@ -333,13 +322,6 @@ try:
     # Métriques dérivées post-join
     info("Calcul des métriques dérivées...")
     df_final = df_final.withColumn(
-        # Densité d'entreprises par habitant
-        "entreprises_par_1000hab",
-        F.when(
-            F.col("population") > 0,
-            F.round(F.col("nb_entreprises_actives") * 1000 / F.col("population"), 2)
-        ).otherwise(None)
-    ).withColumn(
         # Taux de création (créations année N / total actives)
         "taux_creation_entreprises",
         F.when(
@@ -348,13 +330,6 @@ try:
                 F.col("nb_creations_annee") * 100 / F.col("nb_entreprises_actives"), 2
             )
         ).otherwise(None)
-    ).withColumn(
-        # Catégorie de commune par densité de population
-        "categorie_commune",
-        F.when(F.col("densite_pop") > 5000, "très dense")
-         .when(F.col("densite_pop") > 1000, "dense")
-         .when(F.col("densite_pop") > 200,  "intermédiaire")
-         .otherwise("rural")
     )
  
     ok("Métriques dérivées calculées")
@@ -364,9 +339,8 @@ try:
     df_final.select(
         "code_commune", "nom_commune", "type_local", "annee",
         "valeur_fonciere", "prix_m2", "surface_bati",
-        "population", "densite_pop",
-        "nb_entreprises_actives", "entreprises_par_1000hab",
-        "nb_creations_annee", "taux_creation_entreprises"
+        "nb_entreprises_actives","nb_creations_annee", 
+        "taux_creation_entreprises"
     ).show(5, truncate=True)
  
 except Exception as e:
@@ -432,12 +406,9 @@ try:
             surface_terrain         DOUBLE,
             prix_m2                 DOUBLE,
             nom_commune_insee       STRING,
-            population              INT,
-            superficie_km2          DOUBLE,
             departement             STRING,
             latitude                DOUBLE,
             longitude               DOUBLE,
-            densite_pop             DOUBLE,
             nb_entreprises_actives  INT,
             diversite_sectorielle   INT,
             nb_entreprises_immobilier INT,
@@ -447,9 +418,7 @@ try:
             nb_creations_annee      LONG,
             nb_creations_tech       LONG,
             nb_creations_construction LONG,
-            entreprises_par_1000hab DOUBLE,
-            taux_creation_entreprises DOUBLE,
-            categorie_commune       STRING
+            taux_creation_entreprises DOUBLE
         )
         PARTITIONED BY (code_departement STRING, annee INT)
         STORED AS PARQUET
@@ -485,16 +454,14 @@ try:
         "code_commune", "nom_commune", "code_departement",
         "type_local", "annee", "mois", "date_mutation",
         "valeur_fonciere", "prix_m2", "surface_bati", "nb_pieces",
-        "population", "densite_pop", "categorie_commune",
-        "nb_entreprises_actives", "entreprises_par_1000hab",
+        "categorie_commune", "nb_entreprises_actives", 
         "nb_creations_annee", "taux_creation_entreprises",
         "latitude", "longitude",
         # Champ géographique pour les cartes OpenSearch
-        F.when(
-            F.col("latitude").isNotNull() & F.col("longitude").isNotNull(),
-            F.concat(F.col("latitude").cast(StringType()), F.lit(","),
-                     F.col("longitude").cast(StringType()))
-        ).alias("location")
+        F.struct(
+            F.col("latitude").alias("lat"),
+            F.col("longitude").alias("lon")
+    ).alias("location")
     )
 
     # Supprimer l'index s'il existe déjà
@@ -519,11 +486,7 @@ try:
                 "prix_m2":                   {"type": "double"},
                 "surface_bati":              {"type": "double"},
                 "nb_pieces":                 {"type": "integer"},
-                "population":                {"type": "integer"},
-                "densite_pop":               {"type": "double"},
-                "categorie_commune":         {"type": "keyword"},
                 "nb_entreprises_actives":    {"type": "integer"},
-                "entreprises_par_1000hab":   {"type": "double"},
                 "nb_creations_annee":        {"type": "long"},
                 "taux_creation_entreprises": {"type": "double"},
                 "latitude":                  {"type": "double"},
