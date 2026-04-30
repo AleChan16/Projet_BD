@@ -227,9 +227,9 @@ try:
         F.col("dateCreationEtablissement").alias("etat"),
         F.col("trancheEffectifsEtablissement").alias("date_creation"),
         F.year(F.to_date(
-            F.col("datecreationetablissement"), "yyyy-MM-dd"
+            F.col("dateCreationEtablissement"), "yyyy-MM-dd"
         )).alias("annee_creation"),
-        F.col("trancheeffectifsetablissement").alias("tranche_effectifs"),
+        F.col("trancheEffectifsEtablissement").alias("tranche_effectifs"),
     ).filter(
         F.col("code_commune").isNotNull() &
         (F.length(F.col("code_commune")) == 5)
